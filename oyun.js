@@ -997,13 +997,13 @@
 
   function aslanGucuEkle(miktar) {
     if (aslanGucu >= 100) return;
-    if (gsSkor - fbSkor >= 2) miktar *= 0.75;
+    if (gsSkor - fbSkor >= 1) miktar *= 0.75;
     aslanGucu = Math.min(100, aslanGucu + miktar);
   }
 
   function rakipDengeAl() {
     var fark = gsSkor - fbSkor;
-    if (fark >= 3) {
+    if (fark >= 2) {
       return {
         hiz: 1.22,
         baski: 1.24,
@@ -1022,7 +1022,7 @@
         ikinciBaski: true
       };
     }
-    if (fark === 2) {
+    if (fark === 1) {
       return {
         hiz: 1.16,
         baski: 1.18,
@@ -1039,25 +1039,6 @@
         gkNormal: 26,
         gkKurt: 32,
         ikinciBaski: true
-      };
-    }
-    if (fark === 1) {
-      return {
-        hiz: 1.04,
-        baski: 1.05,
-        kapmaMes: 24,
-        kapmaOran: 1.08,
-        kesmeCap: 14,
-        pasSoguma: 1.15,
-        pasHizCarp: 1.05,
-        sutMesafe: 380,
-        kafaGuc: 0.69,
-        gkUcus: 395,
-        gkHiz: 370,
-        gkTut: 33,
-        gkNormal: 24,
-        gkKurt: 31,
-        ikinciBaski: false
       };
     }
     if (fark < 0) {
@@ -3975,7 +3956,7 @@
             var sutX = acikSol
               ? (saha.kaleSol + 16 + Math.random() * 28)
               : (saha.kaleSag - 16 - Math.random() * 28);
-            var gucTaban = gsSkor - fbSkor >= 2 ? 0.82 : 0.74;
+            var gucTaban = gsSkor - fbSkor >= 1 ? 0.82 : 0.74;
             var guc = clamp(gucTaban + Math.random() * 0.22, 0.72, 0.98);
             sutAt(p, sutX, saha.alt + 22, false, guc);
           } else {
@@ -4022,7 +4003,7 @@
               top.kapmaKoruma = 0.45;
               efektCagir('kapmaYildiz', top.x, top.y);
               sesCal('kapma', 0.7);
-            } else if (gsSkor - fbSkor >= 2 && topMes > 28 && topMes < 52 && p.hamleT <= 0 && Math.random() < 1.1 * dt) {
+            } else if (gsSkor - fbSkor >= 1 && topMes > 28 && topMes < 52 && p.hamleT <= 0 && Math.random() < 1.1 * dt) {
               kaymaBaslat(p);
             }
           }
