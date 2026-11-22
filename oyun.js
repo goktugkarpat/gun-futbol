@@ -279,6 +279,7 @@
     dom.joyTaban = el('joy-taban');
     dom.joyTopuz = el('joy-topuz');
     dom.btnPas = el('btn-pas');
+    dom.btnPasEtiket = el('btn-pas-etiket');
     dom.btnSut = el('btn-sut');
     dom.perdeBaslik = el('perde-baslik');
     dom.btnBasla = el('btn-basla');
@@ -1863,7 +1864,11 @@
     var sureMetin = sureFormatla(kalanSure);
     var yariMetin = altinGol ? 'ALTIN GOL' : (yari === 1 ? '1. YARI' : '2. YARI');
     var aslanYuzde = Math.round(clamp(aslanGucu, 0, 100));
-    var anahtar = gsSkor + '|' + fbSkor + '|' + sureMetin + '|' + yariMetin + '|' + aslanYuzde + '|' + durum;
+    var rakipTopta = durum === 'oyun' && !duranTop && (
+      (top.sahip && top.sahip.takim === 'FB') ||
+      (!top.sahip && top.sonTakim === 'FB' && top.pasHedef && top.pasHedef.takim === 'FB' && top.pasKilitSure > 0)
+    );
+    var anahtar = gsSkor + '|' + fbSkor + '|' + sureMetin + '|' + yariMetin + '|' + aslanYuzde + '|' + durum + '|' + (rakipTopta ? 1 : 0);
     if (!zorla && anahtar === sonHudAnahtar) return;
     sonHudAnahtar = anahtar;
 
@@ -1884,6 +1889,13 @@
     if (dom.aslanKutu) {
       dom.aslanKutu.classList.toggle('hazir', hazirMi);
       dom.aslanKutu.classList.toggle('aslan-hazir', hazirMi);
+    }
+    if (dom.btnPas) {
+      dom.btnPas.classList.toggle('kap-modu', rakipTopta);
+      dom.btnPas.setAttribute('aria-label', rakipTopta ? 'Top kap' : 'Pas');
+    }
+    if (dom.btnPasEtiket) {
+      dom.btnPasEtiket.textContent = rakipTopta ? 'TOP KAP' : 'PAS';
     }
     if (dom.btnSut) {
       dom.btnSut.classList.toggle('aslan-hazir', hazirMi);

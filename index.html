@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div id="oyun-alani">
@@ -73,14 +73,19 @@
       </div>
     </div>
     <div id="sag-dugmeler">
-      <button id="btn-pas" class="oyun-btn pas-btn" type="button">
+      <button id="btn-pas" class="oyun-btn pas-btn" type="button" aria-label="Pas">
         <span class="tus-rozet" aria-hidden="true">X</span>
-        <svg class="btn-ikon" viewBox="0 0 48 48" aria-hidden="true">
+        <svg class="btn-ikon ikon-pas" viewBox="0 0 48 48" aria-hidden="true">
           <circle cx="24" cy="24" r="14" fill="#fff" stroke="#111" stroke-width="3"/>
           <polygon points="24,15 30,20 28,27 20,27 18,20" fill="#111"/>
           <path d="M9 36c6-3 11-3 16 0" fill="none" stroke="#FDB912" stroke-width="3.6" stroke-linecap="round"/>
         </svg>
-        <span class="btn-etiket">PAS</span>
+        <svg class="btn-ikon ikon-kap" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M6 34l11-7M5 24h10M8 14l9 5" stroke="#FFF099" stroke-width="3.6" stroke-linecap="round"/>
+          <circle cx="29" cy="24" r="11.5" fill="#fff" stroke="#111" stroke-width="3"/>
+          <polygon points="29,16.5 34.5,20.5 32.5,27 25.5,27 23.5,20.5" fill="#111"/>
+        </svg>
+        <span id="btn-pas-etiket" class="btn-etiket">PAS</span>
       </button>
       <button id="btn-sut" class="oyun-btn sut-btn" type="button">
         <span class="tus-rozet" aria-hidden="true">Boşluk</span>
@@ -212,7 +217,7 @@
 <script src="efekt.js"></script>
 <script src="saha.js?v=9"></script>
 <script src="oyuncular.js?v=10"></script>
-<script src="oyun.js?v=16"></script>
+<script src="oyun.js?v=17"></script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:') && !new URLSearchParams(location.search).has('sw0')) {
   window.addEventListener('load', function () {

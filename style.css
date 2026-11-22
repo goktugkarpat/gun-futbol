@@ -430,6 +430,32 @@ body {
     inset 0 8px 10px rgba(255, 255, 255, 0.35);
 }
 
+#btn-pas .ikon-kap {
+  display: none;
+}
+
+#btn-pas.kap-modu .ikon-pas {
+  display: none;
+}
+
+#btn-pas.kap-modu .ikon-kap {
+  display: block;
+}
+
+#btn-pas.pas-btn.kap-modu {
+  background: linear-gradient(160deg, #ff9f1c 0%, #e06200 62%, #a83c00 100%);
+  box-shadow:
+    0 6px 0 #111,
+    0 10px 18px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 4px #fff099,
+    inset 0 8px 10px rgba(255, 255, 255, 0.35);
+}
+
+#btn-pas.pas-btn.kap-modu .btn-etiket {
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
 #btn-sut.sut-btn {
   width: 132px;
   height: 132px;
@@ -1155,6 +1181,10 @@ body {
   #btn-pas.pas-btn {
     width: 88px;
     height: 88px;
+  }
+
+  #btn-pas.pas-btn.kap-modu .btn-etiket {
+    font-size: 11px;
   }
 
   #btn-sut.sut-btn {
