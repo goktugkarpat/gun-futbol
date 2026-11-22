@@ -11,6 +11,7 @@ seçilir. Maç iki devredir, her devre 2,5 dakika sürer. Türkçe spiker her po
 ## Oyunda neler var
 
 - **11'e 11 gerçek kadrolar:** Galatasaray ve seçilen rakibin oyuncuları; spiker topu alan her futbolcunun adını söyler.
+- **Gün hep göz önünde:** başının üstündeki sarı **GÜN** rozetiyle sahada hemen bulunur; kamera topu yakından izler.
 - **Aslan Şutu:** oynadıkça dolan Aslan Gücü tamamlanınca ŞUT düğmesi alevlenir; basınca durdurulması çok zor, ateşli özel bir şut çıkar.
 - **Kaleciler topu tutar:** şutları ve ortaları yakalar, sonra elle pas verir ya da uzun degaj yapar.
 - **Duran toplar:** taç, korner ve aut atışlarında nişan oku ve güç çubuğu çıkar.
