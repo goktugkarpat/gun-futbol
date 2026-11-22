@@ -272,6 +272,7 @@
     dom.aslanKutu = el('aslan-kutu');
     dom.aslanDolu = el('aslan-dolu');
     dom.aslanYazi = el('aslan-yazi');
+    dom.molaBtn = el('mola-btn');
     dom.sesBtn = el('ses-btn');
     dom.dokunmatikKatman = el('dokunmatik-katman');
     dom.solAlan = el('sol-hareket-alani');
@@ -291,11 +292,13 @@
     dom.perdeMola = el('perde-mola');
     dom.btnMolaDevam = el('btn-mola-devam');
     dom.btnMolaYeniden = el('btn-mola-yeniden');
+    dom.btnMolaAna = el('btn-mola-ana');
     dom.perdeSonuc = el('perde-sonuc');
     dom.sonucBaslik = el('sonuc-baslik');
     dom.sonucSkor = el('sonuc-skor');
     dom.sonucIstat = el('sonuc-istat');
     dom.btnTekrar = el('btn-tekrar');
+    dom.btnSonucAna = el('btn-sonuc-ana');
     dom.rakipSkorKutu = el('rakip-skor-kutu');
     dom.rakipAd = el('rakip-ad');
     dom.rakipRozet = el('rakip-rozet');
@@ -994,7 +997,105 @@
 
   function aslanGucuEkle(miktar) {
     if (aslanGucu >= 100) return;
+    if (gsSkor - fbSkor >= 2) miktar *= 0.75;
     aslanGucu = Math.min(100, aslanGucu + miktar);
+  }
+
+  function rakipDengeAl() {
+    var fark = gsSkor - fbSkor;
+    if (fark >= 3) {
+      return {
+        hiz: 1.22,
+        baski: 1.24,
+        kapmaMes: 29,
+        kapmaOran: 1.55,
+        kesmeCap: 20,
+        pasSoguma: 0.78,
+        pasHizCarp: 1.45,
+        sutMesafe: 440,
+        kafaGuc: 0.76,
+        gkUcus: 435,
+        gkHiz: 415,
+        gkTut: 36,
+        gkNormal: 27,
+        gkKurt: 33,
+        ikinciBaski: true
+      };
+    }
+    if (fark === 2) {
+      return {
+        hiz: 1.16,
+        baski: 1.18,
+        kapmaMes: 27,
+        kapmaOran: 1.40,
+        kesmeCap: 18,
+        pasSoguma: 0.90,
+        pasHizCarp: 1.30,
+        sutMesafe: 415,
+        kafaGuc: 0.73,
+        gkUcus: 420,
+        gkHiz: 395,
+        gkTut: 35,
+        gkNormal: 26,
+        gkKurt: 32,
+        ikinciBaski: true
+      };
+    }
+    if (fark === 1) {
+      return {
+        hiz: 1.04,
+        baski: 1.05,
+        kapmaMes: 24,
+        kapmaOran: 1.08,
+        kesmeCap: 14,
+        pasSoguma: 1.15,
+        pasHizCarp: 1.05,
+        sutMesafe: 380,
+        kafaGuc: 0.69,
+        gkUcus: 395,
+        gkHiz: 370,
+        gkTut: 33,
+        gkNormal: 24,
+        gkKurt: 31,
+        ikinciBaski: false
+      };
+    }
+    if (fark < 0) {
+      return {
+        hiz: 0.95,
+        baski: 0.95,
+        kapmaMes: 23,
+        kapmaOran: 0.90,
+        kesmeCap: 12,
+        pasSoguma: 1.35,
+        pasHizCarp: 0.92,
+        sutMesafe: 360,
+        kafaGuc: 0.66,
+        gkUcus: 375,
+        gkHiz: 345,
+        gkTut: 32,
+        gkNormal: 23,
+        gkKurt: 29,
+        ikinciBaski: false
+      };
+    }
+    return {
+      hiz: 1.00,
+      baski: 1.00,
+      kapmaMes: 24,
+      kapmaOran: 1.00,
+      kesmeCap: 14,
+      pasSoguma: 1.20,
+      pasHizCarp: 1.00,
+      sutMesafe: 375,
+      kafaGuc: 0.68,
+      gkUcus: 385,
+      gkHiz: 360,
+      gkTut: 33,
+      gkNormal: 24,
+      gkKurt: 31,
+      ikinciBaski: false
+    };
   }
 
   function kullaniciGirisAl() {
@@ -1320,7 +1421,7 @@
     top.pasKilitSure = clamp(tahminiVaris + 0.55, 0.90, 1.75);
     top.pasAlisKilidi = hedef ? clamp(tahminiVaris * 1.15, 0.28, 0.85) : 0;
     if (hedef) hedef.sonPasVeren = pasci;
-    if (pasci.takim === 'FB') fbPasSoguma = 1.25;
+    if (pasci.takim === 'FB') fbPasSoguma = rakipDengeAl().pasSoguma;
     top.x = pasci.x + (dx / dist) * 20;
     top.y = pasci.y + (dy / dist) * 20;
     top.z = basZ;
@@ -1746,6 +1847,14 @@
       }
     }
 
+    if (dom.molaBtn) {
+      if (durum === 'oyun') {
+        perdeGoster(dom.molaBtn, 'inline-flex');
+      } else {
+        perdeGizle(dom.molaBtn);
+      }
+    }
+
     if (durum === 'baslik') {
       perdeGoster(dom.perdeBaslik, 'flex');
     } else if (durum === 'devre') {
@@ -1788,8 +1897,8 @@
     }
     if (dom.aslanYazi) {
       dom.aslanYazi.textContent = hazirMi
-        ? 'ASLAN ŞUTU HAZIR!'
-        : (aslanYuzde > 0 ? ('ASLAN %' + aslanYuzde) : 'ASLAN GÜCÜ');
+        ? 'ASLAN VURUŞU HAZIR!'
+        : (aslanYuzde > 0 ? ('ASLAN VURUŞU %' + aslanYuzde) : 'ASLAN VURUŞU');
     }
     if (dom.aslanKutu) {
       dom.aslanKutu.classList.toggle('hazir', hazirMi);
@@ -1915,6 +2024,29 @@
     perdeleriSenkronla();
     hudGuncelle(true);
     tribunAyar(true, 0.44);
+  }
+
+  function anaEkranaDon() {
+    odakBirak();
+    tuslar = {};
+    joySifirla();
+    girdiTamponSifirla();
+    duranTop = null;
+    cutawayDurumu = false;
+    cutawayBekleyen = null;
+    golKutlamaBekliyor = false;
+    golKutlamaGecikme = 0;
+    golBilgiBekleyen = null;
+    if (global.SES && typeof global.SES.durdur === 'function') {
+      guvenliCagir('SES.durdur', function () { global.SES.durdur(); });
+    } else {
+      tribunAyar(false, 0);
+    }
+    efektCagir('sifirla');
+    durum = 'baslik';
+    santraDizilisi('GS');
+    perdeleriSenkronla();
+    hudGuncelle(true);
   }
 
   function maciBitir() {
@@ -2222,6 +2354,7 @@
         gk.kurtarisSure = 0.42;
       }
       // Köşeye giden sert şuta uçarak hamle yap
+      var denge = rakipDengeAl();
       if (
         !top.ortaMi &&
         Math.abs(top.vy) > 220 &&
@@ -2234,7 +2367,7 @@
         gk.ucusMax = 0.56;
         gk.ucusT = 0.56;
         gk.kurtarisSure = 0.56;
-        var maxUcusHiz = gk.takim === 'GS' ? 430 : 385;
+        var maxUcusHiz = gk.takim === 'GS' ? 430 : denge.gkUcus;
         gk.ucusVx = gk.ucusYon * clamp((Math.abs(hedefX - gk.x) / Math.max(0.18, tVaris)) * 0.92, 280, maxUcusHiz);
         efektCagir('toz', gk.x, gk.y, 7);
         sesCal('ucus', 0.9);
@@ -2242,9 +2375,10 @@
       }
     }
 
+    var dengeHiz = rakipDengeAl();
     var dx = hedefX - gk.x;
     var dy = anaY - gk.y;
-    var maxHiz = sutGeliyor ? (ustMu ? 360 : 255) : (ustMu ? 250 : 225);
+    var maxHiz = sutGeliyor ? (ustMu ? dengeHiz.gkHiz : 255) : (ustMu ? 250 : 225);
     var dist = hypot2(dx, dy);
     if (dist > 3) {
       var hiz = Math.min(maxHiz, dist * 7.5);
@@ -2267,11 +2401,12 @@
     if (gk === top.sonVuran && top.almakYasakSure > 0) return false;
     if (top.degajKoruma > 0 && top.sonTakim === gk.takim) return false;
 
+    var denge = rakipDengeAl();
     var ucuyorMu = gk.ucusT > 0;
     var tutYariCap = ucuyorMu
-      ? (gk.takim === 'GS' ? 36 : 33)
+      ? (gk.takim === 'GS' ? 36 : denge.gkTut)
       : (gk.takim === 'FB'
-        ? (gk.kurtarisSure > 0 ? 31 : 24)
+        ? (gk.kurtarisSure > 0 ? denge.gkKurt : denge.gkNormal)
         : (gk.kurtarisSure > 0 ? 27 : 20));
     var maxZ = ucuyorMu ? (saha.kaleYukseklik + 10) : (saha.kaleYukseklik + 6);
     if (top.z >= maxZ) return false;
@@ -3389,7 +3524,7 @@
         ) {
           var acikSolK = !gsKaleci || gsKaleci.x >= saha.ortaX;
           var fbHx = acikSolK ? (saha.kaleSol + 22) : (saha.kaleSag - 22);
-          kafaVurusuAt(ko, fbHx, saha.alt + 22, 0.68);
+          kafaVurusuAt(ko, fbHx, saha.alt + 22, rakipDengeAl().kafaGuc);
           return;
         }
         if (ko.takim === 'GS' && (ko === aktifOyuncu || ko === top.pasHedef) && tamponPasSure > 0) {
@@ -3464,7 +3599,7 @@
         var kapmaCap = pasHedefMi
           ? 42
           : ((top.pasHedef && top.pasKilitSure > 0 && top.sonTakim === 'GS' && o.takim === 'FB')
-            ? 13
+            ? rakipDengeAl().kesmeCap
             : ((o.takim === 'GS' && (o.gunMu || o === aktifOyuncu)) ? 27 : 21));
         if (o.hamleT > 0) kapmaCap += 14;
 
@@ -3561,6 +3696,21 @@
     return enYakin;
   }
 
+  function fbIkinciBaskiSec(birinci) {
+    var enYakin = null;
+    var enMes = 260;
+    for (var i = 0; i < fbOyuncular.length; i++) {
+      var f = fbOyuncular[i];
+      if (f.kaleciMi || f.sersemSure > 0 || f === birinci) continue;
+      var d = hypot2(f.x - top.x, f.y - top.y);
+      if (d < enMes) {
+        enMes = d;
+        enYakin = f;
+      }
+    }
+    return enYakin;
+  }
+
   function otoGsKararVer(p, dt, saha) {
     // 1) Top GS'de ve bu oyuncuda ise
     if (top.sahip === p) {
@@ -3617,7 +3767,9 @@
 
   function oyunculariGuncelle(dt, saha) {
     var giris = kullaniciGirisAl();
+    var denge = rakipDengeAl();
     var fbBaskici = fbBaskiSec();
+    var fbIkinciBaskici = denge.ikinciBaski ? fbIkinciBaskiSec(fbBaskici) : null;
     var gsTopaSahip = Boolean(top.sahip && top.sahip.takim === 'GS');
     var i;
 
@@ -3814,17 +3966,17 @@
           oyuncuHedefHizlaGit(p, hedefX, hedefY, destekHiz, dt);
         }
       } else {
-        // --- FB AI (Hücum organizasyonlu, arada gerçek goller atan derbi rakibi) ---
-        var fbAtakBonus = (gsSkor - fbSkor >= 2) ? 1.09 : (fbSkor > gsSkor ? 0.94 : 1.02);
+        // --- FB AI (Hücum organizasyonlu, skora göre çekişmeli derbi rakibi) ---
         if (top.sahip === p) {
           var yakinGs = enYakinRakipMesafe(p);
           // Ceza sahasına girince kalecinin boş köşesine bitirici şut çek
-          if (p.y > saha.alt - 370) {
+          if (p.y > saha.alt - denge.sutMesafe) {
             var acikSol = !gsKaleci || gsKaleci.x >= saha.ortaX;
             var sutX = acikSol
               ? (saha.kaleSol + 16 + Math.random() * 28)
               : (saha.kaleSag - 16 - Math.random() * 28);
-            var guc = clamp(0.74 + Math.random() * 0.24, 0.72, 0.98);
+            var gucTaban = gsSkor - fbSkor >= 2 ? 0.82 : 0.74;
+            var guc = clamp(gucTaban + Math.random() * 0.22, 0.72, 0.98);
             sutAt(p, sutX, saha.alt + 22, false, guc);
           } else {
             var fbHedef = enUygunPasHedefi(p, 0, 1);
@@ -3835,9 +3987,9 @@
               fbHedef &&
               fbHedef.y > saha.alt - 340 &&
               Math.abs(fbHedef.x - saha.ortaX) < 280 &&
-              Math.random() < 1.35 * dt;
-            var baskidaPas = pasHakki && yakinGs.dist < 95 && fbHedef && Math.random() < 1.65 * dt;
-            var ileriPas = pasHakki && p.topTutmaSure >= 0.65 && fbHedef && fbHedef.y > p.y + 75 && Math.random() < 0.72 * dt;
+              Math.random() < 1.35 * denge.pasHizCarp * dt;
+            var baskidaPas = pasHakki && yakinGs.dist < 95 && fbHedef && Math.random() < 1.65 * denge.pasHizCarp * dt;
+            var ileriPas = pasHakki && p.topTutmaSure >= 0.65 && fbHedef && fbHedef.y > p.y + 75 && Math.random() < 0.72 * denge.pasHizCarp * dt;
             if (kanatOrta || baskidaPas || ileriPas) {
               pasAt(p, fbHedef, 0, 1);
             } else {
@@ -3845,7 +3997,7 @@
               if (yakinGs.rakip && yakinGs.dist < 105) {
                 kacisX = clamp(p.x + (p.x >= yakinGs.rakip.x ? 115 : -115), saha.sol + 75, saha.sag - 75);
               }
-              oyuncuHedefHizlaGit(p, kacisX, saha.alt - 190, 266 * fbAtakBonus * p.hiz, dt);
+              oyuncuHedefHizlaGit(p, kacisX, saha.alt - 190, 266 * denge.hiz * p.hiz, dt);
             }
           }
         } else if (top.sahip === gsKaleci) {
@@ -3856,21 +4008,31 @@
           if (santraBekleSure > 0 && santraBaslayan === 'GS') {
             oyuncuHedefHizlaGit(p, p.basX, Math.min(p.basY, saha.ortaY - 120), 120 * p.hiz, dt);
           } else {
-            oyuncuHedefHizlaGit(p, top.x, top.y, 238 * fbAtakBonus * p.hiz, dt);
+            oyuncuHedefHizlaGit(p, top.x, top.y, 238 * denge.baski * p.hiz, dt);
           }
         } else if (p === fbBaskici && gsTopaSahip && !(top.sahip && top.sahip.kaleciMi)) {
           if (santraBekleSure > 0 && santraBaslayan === 'GS') {
             oyuncuHedefHizlaGit(p, p.basX, Math.min(p.basY, saha.ortaY - 120), 120 * p.hiz, dt);
           } else {
             var topMes = hypot2(top.x - p.x, top.y - p.y);
-            oyuncuHedefHizlaGit(p, top.x, top.y, 232 * fbAtakBonus * p.hiz, dt);
-            if (topMes < 24 && top.sahip && top.sahip.takim === 'GS' && !top.sahip.kaleciMi && top.kapmaKoruma <= 0 && Math.random() < 1.35 * fbAtakBonus * dt) {
+            oyuncuHedefHizlaGit(p, top.x, top.y, 234 * denge.baski * p.hiz, dt);
+            if (topMes < denge.kapmaMes && top.sahip && top.sahip.takim === 'GS' && !top.sahip.kaleciMi && top.kapmaKoruma <= 0 && Math.random() < 1.35 * denge.kapmaOran * dt) {
               top.sahip.sersemSure = 0.25;
               topSahiplikVer(p, true);
               top.kapmaKoruma = 0.45;
               efektCagir('kapmaYildiz', top.x, top.y);
               sesCal('kapma', 0.7);
+            } else if (gsSkor - fbSkor >= 2 && topMes > 28 && topMes < 52 && p.hamleT <= 0 && Math.random() < 1.1 * dt) {
+              kaymaBaslat(p);
             }
+          }
+        } else if (p === fbIkinciBaskici && gsTopaSahip && !(top.sahip && top.sahip.kaleciMi)) {
+          if (santraBekleSure > 0 && santraBaslayan === 'GS') {
+            oyuncuHedefHizlaGit(p, p.basX, Math.min(p.basY, saha.ortaY - 120), 120 * p.hiz, dt);
+          } else {
+            var karsilamaX = clamp(top.x * 0.78 + saha.ortaX * 0.22, saha.sol + 60, saha.sag - 60);
+            var karsilamaY = clamp(top.y - 36, saha.ust + 140, saha.alt - 160);
+            oyuncuHedefHizlaGit(p, karsilamaX, karsilamaY, 228 * denge.baski * p.hiz, dt);
           }
         } else {
           var fbKaymaY = clamp((top.y - saha.ortaY) * 0.42, -290, 290);
@@ -3895,7 +4057,7 @@
           }
           fHx = clamp(fHx, saha.sol + 45, saha.sag - 45);
           fHy = clamp(fHy, saha.ust + 60, saha.alt - 60);
-          oyuncuHedefHizlaGit(p, fHx, fHy, 212 * fbAtakBonus * p.hiz, dt);
+          oyuncuHedefHizlaGit(p, fHx, fHy, 214 * denge.hiz * p.hiz, dt);
         }
       }
 
@@ -4282,10 +4444,10 @@
           : (d.atan ? d.atan.ad + ' #' + d.atan.no + ' topun başında...' : 'Oyuncular yerini alıyor...')))
       : (rakipMeta.ad + ' kullanıyor...');
 
-    var kutuW = vw >= 1240 ? Math.min(vw - 820, 420) : Math.min(vw - 28, 390);
+    var kutuW = vw >= 1340 ? Math.min(vw - 900, 420) : Math.min(vw - 28, 390);
     var kutuH = 48;
     var kx = (vw - kutuW) * 0.5;
-    var ky = vw >= 1240 ? 14 : (vw > 980 ? 84 : 148);
+    var ky = vw >= 1340 ? 14 : (vw > 1060 ? 84 : 148);
 
     ctx.save();
     ctx.fillStyle = 'rgba(11, 16, 26, 0.88)';
@@ -4770,6 +4932,24 @@
         guvenliCagir('btnMolaYeniden.click', maciBaslat);
       });
     }
+    if (dom.btnMolaAna) {
+      dom.btnMolaAna.addEventListener('click', function () {
+        guvenliCagir('btnMolaAna.click', anaEkranaDon);
+      });
+    }
+    if (dom.btnSonucAna) {
+      dom.btnSonucAna.addEventListener('click', function () {
+        guvenliCagir('btnSonucAna.click', anaEkranaDon);
+      });
+    }
+    if (dom.molaBtn) {
+      dom.molaBtn.addEventListener('click', function () {
+        guvenliCagir('molaBtn.click', function () {
+          odakBirak();
+          if (durum === 'oyun') molaAc();
+        });
+      });
+    }
     if (dom.sesBtn) {
       dom.sesBtn.addEventListener('click', function () {
         guvenliCagir('sesBtn.click', function () {
@@ -5149,6 +5329,7 @@
     devamEt: ikinciYariBaslat,
     molaAc: molaAc,
     molaKapat: molaKapat,
+    anaEkran: anaEkranaDon,
     tekrarOyna: maciBaslat,
     otoAyar: function (acik) { otoMod = Boolean(acik); },
     tetikleAslanSutu: tetikleAslanSutu,

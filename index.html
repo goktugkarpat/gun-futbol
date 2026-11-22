@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <div id="oyun-alani">
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div id="aslan-kutu" aria-label="Aslan Gücü göstergesi">
+    <div id="aslan-kutu" aria-label="Aslan Vuruşu göstergesi">
       <span class="aslan-simge" aria-hidden="true">
         <svg viewBox="0 0 36 36" width="24" height="24">
           <circle cx="18" cy="18" r="15" fill="#FDB912" stroke="#111" stroke-width="2.6"/>
@@ -46,9 +46,16 @@
       </span>
       <div class="aslan-iz">
         <div id="aslan-dolu"></div>
-        <span id="aslan-yazi">ASLAN GÜCÜ</span>
+        <span id="aslan-yazi">ASLAN VURUŞU</span>
       </div>
     </div>
+
+    <button id="mola-btn" class="gizli" type="button" aria-label="Mola ve Ana Ekran">
+      <svg class="mola-ikon" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <rect x="7" y="6" width="6.5" height="20" rx="2.5" fill="#111"/>
+        <rect x="18.5" y="6" width="6.5" height="20" rx="2.5" fill="#111"/>
+      </svg>
+    </button>
 
     <button id="ses-btn" type="button" aria-label="Ses">
       <svg class="ses-ikon" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
@@ -174,6 +181,7 @@
       <div class="kart-dugmeler">
         <button id="btn-mola-devam" class="ana-dugme" type="button">DEVAM ET ▶</button>
         <button id="btn-mola-yeniden" class="ikincil-dugme" type="button">YENİDEN</button>
+        <button id="btn-mola-ana" class="ikincil-dugme" type="button">BAŞKA MAÇ SEÇ</button>
       </div>
     </div>
   </div>
@@ -191,7 +199,10 @@
       <h2 id="sonuc-baslik" class="kart-baslik">ŞAMPİYON GS!</h2>
       <div id="sonuc-skor" class="buyuk-skor">0 - 0</div>
       <div id="sonuc-istat" class="sonuc-istat"></div>
-      <button id="btn-tekrar" class="ana-dugme" type="button">TEKRAR OYNA</button>
+      <div class="kart-dugmeler">
+        <button id="btn-tekrar" class="ana-dugme" type="button">TEKRAR OYNA</button>
+        <button id="btn-sonuc-ana" class="ikincil-dugme" type="button">BAŞKA MAÇ SEÇ</button>
+      </div>
     </div>
   </div>
 </div>
@@ -201,7 +212,7 @@
 <script src="efekt.js"></script>
 <script src="saha.js?v=9"></script>
 <script src="oyuncular.js?v=10"></script>
-<script src="oyun.js?v=14"></script>
+<script src="oyun.js?v=15"></script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:') && !new URLSearchParams(location.search).has('sw0')) {
   window.addEventListener('load', function () {

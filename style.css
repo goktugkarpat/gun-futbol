@@ -178,7 +178,7 @@ body {
   align-items: center;
   gap: 10px;
   margin-left: auto;
-  margin-right: 10px;
+  margin-right: 0;
   padding: 7px 14px 7px 10px;
   border: 3.5px solid #111;
   border-radius: 999px;
@@ -202,7 +202,7 @@ body {
 
 .aslan-iz {
   position: relative;
-  width: 224px;
+  width: 248px;
   height: 34px;
   border: 3px solid #111;
   border-radius: 999px;
@@ -227,9 +227,10 @@ body {
 #aslan-yazi {
   position: relative;
   z-index: 2;
-  font-size: 15.5px;
+  padding: 0 10px;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: #fff;
   white-space: nowrap;
   text-shadow:
@@ -265,7 +266,8 @@ body {
   color: #fffbe0;
 }
 
-/* ── Ses Düğmesi ── */
+/* ── Mola & Ses Düğmeleri ── */
+#mola-btn,
 #ses-btn {
   width: 58px;
   height: 58px;
@@ -286,11 +288,13 @@ body {
   transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
 }
 
+#mola-btn .mola-ikon,
 #ses-btn .ses-ikon {
   width: 28px;
   height: 28px;
 }
 
+#mola-btn:active,
 #ses-btn:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 #111;
@@ -370,7 +374,7 @@ body {
   bottom: max(5vh, calc(env(safe-area-inset-bottom) + 18px));
   display: flex;
   align-items: flex-end;
-  gap: 18px;
+  gap: 20px;
   pointer-events: auto;
 }
 
@@ -394,13 +398,13 @@ body {
 }
 
 .oyun-btn .btn-ikon {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   pointer-events: none;
 }
 
 .oyun-btn .btn-etiket {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -416,8 +420,8 @@ body {
 }
 
 #btn-pas.pas-btn {
-  width: 94px;
-  height: 94px;
+  width: 114px;
+  height: 114px;
   background: linear-gradient(160deg, #3c8eff 0%, #1558cf 62%, #093b99 100%);
   box-shadow:
     0 6px 0 #111,
@@ -427,8 +431,8 @@ body {
 }
 
 #btn-sut.sut-btn {
-  width: 110px;
-  height: 110px;
+  width: 132px;
+  height: 132px;
   background: linear-gradient(160deg, #ff3d5a 0%, #cc0831 64%, #8d0220 100%);
   box-shadow:
     0 6px 0 #111,
@@ -438,12 +442,12 @@ body {
 }
 
 #btn-sut.sut-btn .btn-ikon {
-  width: 46px;
-  height: 46px;
+  width: 56px;
+  height: 56px;
 }
 
 #btn-sut.sut-btn .btn-etiket {
-  font-size: 15px;
+  font-size: 18px;
 }
 
 #btn-sut.aslan-hazir {
@@ -1060,7 +1064,7 @@ body {
 }
 
 /* ═════════ Küçük Ekran & Dikey Tablet Uyumu (üst kale açık kalır) ═════════ */
-@media (max-width: 980px) {
+@media (max-width: 1060px) {
   #aslan-kutu {
     position: fixed;
     left: max(16px, calc(env(safe-area-inset-left) + 12px));
@@ -1069,7 +1073,7 @@ body {
   }
 
   .aslan-iz {
-    width: 210px;
+    width: 238px;
   }
 }
 
@@ -1121,7 +1125,7 @@ body {
   }
 
   .aslan-iz {
-    width: 174px;
+    width: 196px;
     height: 25px;
     border-width: 2.5px;
   }
@@ -1130,6 +1134,7 @@ body {
     font-size: 12px;
   }
 
+  #mola-btn,
   #ses-btn {
     width: 44px;
     height: 44px;
@@ -1137,33 +1142,34 @@ body {
     border-width: 3px;
   }
 
+  #mola-btn .mola-ikon,
   #ses-btn .ses-ikon {
     width: 22px;
     height: 22px;
   }
 
   #sag-dugmeler {
-    gap: 12px;
+    gap: 14px;
   }
 
   #btn-pas.pas-btn {
-    width: 80px;
-    height: 80px;
+    width: 88px;
+    height: 88px;
   }
 
   #btn-sut.sut-btn {
-    width: 94px;
-    height: 94px;
+    width: 104px;
+    height: 104px;
   }
 
   .oyun-btn .btn-ikon {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
   }
 
   #btn-sut.sut-btn .btn-ikon {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
   }
 
   .derbi-kart,
