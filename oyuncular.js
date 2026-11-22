@@ -1057,13 +1057,13 @@
     if (p.gunMu) {
       ctx.save();
       var badgeText = 'GÜN';
-      ctx.font = '900 10.5px "Arial Black", "Segoe UI", Arial, sans-serif';
+      ctx.font = '900 15.5px "Arial Black", "Segoe UI", Arial, sans-serif';   // 11 inç tablette de okunsun
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      var bw = ctx.measureText(badgeText).width + 16;
-      var bh = 16.5;
-      var by = -46.0 * scale + Math.sin(t * 4.5) * 1.1;
+      var bw = ctx.measureText(badgeText).width + 22;
+      var bh = 23.5;
+      var by = -51.0 * scale + Math.sin(t * 4.5) * 1.1;
 
       // Golden outer glow
       ctx.shadowColor = 'rgba(255, 215, 0, 0.85)';

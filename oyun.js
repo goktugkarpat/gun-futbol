@@ -4149,8 +4149,8 @@
     }
 
     var camScale = vw > vh
-      ? Math.min(vw / 1340, vh / 1020)
-      : Math.min(vw / 1320, vh / 2060);
+      ? Math.min(vw / 1120, vh / 850)      // kamera sahaya daha yakın (eski 1340 / 1020)
+      : Math.min(vw / 1120, vh / 1740);
     if (!(camScale > 0)) camScale = 1;
     var visW = vw / camScale;
     var visH = vh / camScale;

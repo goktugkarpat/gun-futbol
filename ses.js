@@ -289,7 +289,7 @@
   var TEPKI = {
     //            dosya              kazanç  soğuma(ms)
     gol:      ['tribun_gol',      1.00, 1500],
-    alkis:    ['tribun_alkis',    0.80, 1600],
+    alkis:    ['tribun_alkis',    0.42, 2500],   // ebeveyn: alkış tiz ve rahatsız ediciydi → yumuşatıldı ve kısıldı
     ooo:      ['tribun_ooo',      0.90, 1400],
     ah:       ['tribun_ah',       0.85, 2500],
     heyecan:  ['tribun_heyecan',  0.62, 1700]
@@ -487,7 +487,7 @@
   function tezahuratDalgasiCal(audioCtx) {
     if (!tribunAktifMi || !sesAktifMi()) return;
     if (typeof document !== 'undefined' && document.hidden) return;
-    if (Math.random() < 0.35) tepkiCal('alkis', 0.55);   // kayıt tabanlı tribün: sentetik dalga yerine seyrek hafif alkış
+    // (aralarda rastgele alkış kaldırıldı: ebeveyn tiz alkış sesinden rahatsız oldu)
     return;
     // (eski sentetik dalga – kullanılmıyor)
     // eslint-disable-next-line no-unreachable
