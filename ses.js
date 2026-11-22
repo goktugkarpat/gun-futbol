@@ -170,6 +170,11 @@
   var aktifTezahurat = null; // { ad, el }
   var sonTezahuratAd = '';
   var spikerKonusuyorMu = false;
+  var golBufferHavuz = {};
+  var golBufferYukleniyor = {};
+  var aktifSpikerKaynak = null;
+  var aktifTezahuratKaynak = null;
+  var aktifTezahuratGain = null;
 
   function simdiMs() {
     return typeof performance !== 'undefined' && typeof performance.now === 'function'
@@ -367,7 +372,11 @@
     } catch (e) { return false; }
   }
 
-  function tezahuratSesDuzeyiHesapla() {
+  function tezahuratSesDuzeyiHesapla(ad) {
+    var hedefAd = ad || (aktifTezahurat && aktifTezahurat.ad) || '';
+    if (hedefAd === TEZAHURAT_GOL) {
+      return spikerKonusuyorMu ? 0.80 : 0.96;
+    }
     var baz = Math.max(0.48, Math.min(0.86, 0.45 + tribunHedefSeviye * 0.55));   // spiker susunca net duyulur, konuşurken derine çekilir
     return spikerKonusuyorMu ? baz * 0.40 : baz;
   }
@@ -377,6 +386,11 @@
     if (aktifTezahurat && aktifTezahurat.el) {
       try {
         aktifTezahurat.el.volume = tezahuratSesDuzeyiHesapla();
+      } catch (e) {}
+    }
+    if (aktifTezahuratGain && ctx) {
+      try {
+        aktifTezahuratGain.gain.setTargetAtTime(tezahuratSesDuzeyiHesapla(), ctx.currentTime, 0.08);
       } catch (e) {}
     }
     if (!ambiyansDuck || !ctx) return;
@@ -402,6 +416,14 @@
 
   function tezahuratDurdur() {
     tezahuratZamaniTemizle();
+    if (aktifTezahuratKaynak) {
+      try {
+        aktifTezahuratKaynak.onended = null;
+        aktifTezahuratKaynak.stop();
+      } catch (e) {}
+      aktifTezahuratKaynak = null;
+    }
+    aktifTezahuratGain = null;
     if (aktifTezahurat && aktifTezahurat.el) {
       try {
         aktifTezahurat.el.pause();
@@ -453,18 +475,47 @@
   function tezahuratKlipCal(dosyaAd, zorla) {
     if (!sesAktifMi() || (!tribunAktifMi && !zorla)) return false;
     if (typeof document !== 'undefined' && document.hidden) return false;
-    if (aktifTezahurat && aktifTezahurat.el && !aktifTezahurat.el.paused && !aktifTezahurat.el.ended) {
+    if ((aktifTezahurat && aktifTezahurat.el && !aktifTezahurat.el.paused && !aktifTezahurat.el.ended) || aktifTezahuratKaynak) {
       if (!zorla) return false;
       tezahuratDurdur();
     }
     var ad = dosyaAd || siradakiTezahuratSec();
+    var buf = golBufferHavuz[ad];
+    var audioCtx = buf ? ctxAl() : null;
+    if (buf && audioCtx) {
+      try {
+        var src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        var g = audioCtx.createGain();
+        g.gain.setValueAtTime(tezahuratSesDuzeyiHesapla(ad), audioCtx.currentTime);
+        src.connect(g);
+        g.connect(audioCtx.destination);
+        aktifTezahurat = { ad: ad, el: null };
+        aktifTezahuratKaynak = src;
+        aktifTezahuratGain = g;
+        src.onended = function () {
+          if (aktifTezahuratKaynak === src) {
+            aktifTezahuratKaynak = null;
+            aktifTezahuratGain = null;
+            aktifTezahurat = null;
+            tezahuratSonrakiPlanla(false);
+          }
+        };
+        src.start(audioCtx.currentTime);
+        return true;
+      } catch (e) {
+        aktifTezahuratKaynak = null;
+        aktifTezahuratGain = null;
+        aktifTezahurat = null;
+      }
+    }
     var el = tezahuratElemaniAl(ad);
     if (!el) return false;
     try {
       if (el.readyState > 0 && el.currentTime > 0) {
         try { el.currentTime = 0; } catch (_) {}
       }
-      el.volume = tezahuratSesDuzeyiHesapla();
+      el.volume = tezahuratSesDuzeyiHesapla(ad);
       aktifTezahurat = { ad: ad, el: el };
       var p = el.play();
       if (p && typeof p.catch === 'function') {
@@ -1167,6 +1218,25 @@
   }
 
   var golOnYuklendi = false;
+  function golBufferOnYukle(ad) {
+    if (golBufferHavuz[ad] || golBufferYukleniyor[ad]) return;
+    if (typeof global.fetch !== 'function' || !global.location || (global.location.protocol !== 'http:' && global.location.protocol !== 'https:')) return;
+    var audioCtx = ctxAl();
+    if (!audioCtx || typeof audioCtx.decodeAudioData !== 'function') return;
+    golBufferYukleniyor[ad] = true;
+    try {
+      global.fetch('sesler/' + ad + '.mp3')
+        .then(function (r) { return r.ok ? r.arrayBuffer() : null; })
+        .then(function (buf) {
+          if (!buf) return;
+          audioCtx.decodeAudioData(buf, function (decoded) {
+            golBufferHavuz[ad] = decoded;
+          }, function () {});
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
   function golSesleriniOnYukle() {
     if (golOnYuklendi || !sesAktifMi()) return;
     golOnYuklendi = true;
@@ -1177,14 +1247,23 @@
     ];
     for (var i = 0; i < golKlipler.length; i++) {
       spikerElemaniAl(golKlipler[i]);
+      golBufferOnYukle(golKlipler[i]);
     }
     tezahuratElemaniAl(TEZAHURAT_GOL);
+    golBufferOnYukle(TEZAHURAT_GOL);
     if (!tepkiHavuz.gol) tepkiHavuz.gol = sesElemani(TEPKI.gol[0]);
     if (!tepkiHavuz.ah) tepkiHavuz.ah = sesElemani(TEPKI.ah[0]);
   }
 
   function aktifSpikeriDurdur() {
     ambiyansDuckAyar(false);
+    if (aktifSpikerKaynak) {
+      try {
+        aktifSpikerKaynak.onended = null;
+        aktifSpikerKaynak.stop();
+      } catch (e) {}
+      aktifSpikerKaynak = null;
+    }
     if (!aktifSpiker || !aktifSpiker.el) {
       aktifSpiker = null;
       return;
@@ -1276,7 +1355,7 @@
       }
 
       // Aktif konuşan spiker varsa öncelik karşılaştır; üst üste binmeyi önle
-      if (aktifSpiker && aktifSpiker.el && !aktifSpiker.el.paused && !aktifSpiker.el.ended) {
+      if ((aktifSpiker && aktifSpiker.el && !aktifSpiker.el.paused && !aktifSpiker.el.ended) || (aktifSpiker && aktifSpikerKaynak)) {
         if (oncelik <= aktifSpiker.oncelik) {
           return false;
         }
@@ -1284,6 +1363,42 @@
       } else if (oncelik <= 1 && sonSpikerBitisZamani && tMs - sonSpikerBitisZamani < 1100) {
         // Düşük öncelikli akış cümleleri arasında nefes payı bırak
         return false;
+      }
+
+      var spikerBuf = golBufferHavuz[secilenDosya];
+      var audioCtx = spikerBuf ? ctxAl() : null;
+      if (spikerBuf && audioCtx) {
+        try {
+          var src = audioCtx.createBufferSource();
+          src.buffer = spikerBuf;
+          var g = audioCtx.createGain();
+          g.gain.setValueAtTime(1.0, audioCtx.currentTime);
+          src.connect(g);
+          g.connect(audioCtx.destination);
+          aktifSpiker = { ad: secilenDosya, el: null, oncelik: oncelik };
+          aktifSpikerKaynak = src;
+          sonSpikerZamani[temizAd] = tMs;
+          if (pTopMi) sonOyuncuAnonsMs = tMs;
+          if (pAksMi) sonAksiyonAnonsMs = tMs;
+          if (grup) {
+            sonGrupSecim[temizAd] = secilenDosya;
+          }
+          src.onended = function () {
+            if (aktifSpikerKaynak === src) {
+              aktifSpikerKaynak = null;
+              aktifSpiker = null;
+              sonSpikerBitisZamani = simdiMs();
+              ambiyansDuckAyar(false);
+            }
+          };
+          src.start(audioCtx.currentTime);
+          ambiyansDuckAyar(true);
+          return true;
+        } catch (e) {
+          aktifSpikerKaynak = null;
+          aktifSpiker = null;
+          ambiyansDuckAyar(false);
+        }
       }
 
       var el = spikerElemaniAl(secilenDosya);
@@ -1384,6 +1499,9 @@
       if (aktifTezahurat && aktifTezahurat.el) {
         try { aktifTezahurat.el.volume = tezahuratSesDuzeyiHesapla(); } catch (e) {}
       }
+      if (aktifTezahuratGain && audioCtx) {
+        try { aktifTezahuratGain.gain.setTargetAtTime(tezahuratSesDuzeyiHesapla(), audioCtx.currentTime, 0.08); } catch (e) {}
+      }
       tezahuratSonrakiPlanla(true);
       return true;
     },
@@ -1397,6 +1515,9 @@
       tribunHedefSeviye = Math.max(0, Math.min(0.85, seviye));
       if (aktifTezahurat && aktifTezahurat.el) {
         try { aktifTezahurat.el.volume = tezahuratSesDuzeyiHesapla(); } catch (e) {}
+      }
+      if (aktifTezahuratGain && ctx) {
+        try { aktifTezahuratGain.gain.setTargetAtTime(tezahuratSesDuzeyiHesapla(), ctx.currentTime, 0.08); } catch (e) {}
       }
       if (!ambiyansMaster || !ctx || !tribunAktifMi || !sesAktifMi()) return;
       try {
