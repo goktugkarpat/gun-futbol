@@ -159,6 +159,8 @@
   var TEZAHURAT_MAC = [
     'tezahurat_cimbombom',
     'tezahurat_cimbom_alkis',
+    'tezahurat_cimbombom',        // ebeveyn: "Cim Bom Bom" aralarda sık girsin ve duyulsun
+    'tezahurat_cimbom_alkis',
     'tezahurat_sampiyon',
     'tezahurat_sari_kirmizi',
     'tezahurat_haydi_aslanlar'
@@ -276,8 +278,97 @@
     return buf;
   }
 
+  // ------------------------------------------------------------------
+  // TRİBÜN KAYITLARI (gen_taraftar.py): kesintisiz uğultu döngüsü + olaylara tepki klipleri
+  // ------------------------------------------------------------------
+  var UGULTU_DOSYA = 'tribun_ugultu';
+  var UGULTU_BINDIRME = 1.8;          // sn: döngü sonu yeni başlangıçla bu kadar üst üste eritilir (mp3 boşluğu duyulmaz)
+  var ugultu = { a: null, b: null, aktif: null, gecisBas: 0, timer: null, seviye: 0, hedef: 0 };
+  var tepkiHavuz = {};
+  var sonTepkiMs = {};
+  var TEPKI = {
+    //            dosya              kazanç  soğuma(ms)
+    gol:      ['tribun_gol',      1.00, 1500],
+    alkis:    ['tribun_alkis',    0.80, 1600],
+    ooo:      ['tribun_ooo',      0.90, 1400],
+    ah:       ['tribun_ah',       0.85, 2500],
+    heyecan:  ['tribun_heyecan',  0.62, 1700]
+  };
+
+  function sesElemani(ad) {
+    if (typeof global.Audio !== 'function') return null;
+    try {
+      var el = new global.Audio('sesler/' + ad + '.mp3');
+      el.preload = 'auto';
+      return el;
+    } catch (e) { return null; }
+  }
+
+  function ugultuHedefHesapla() {
+    if (!tribunAktifMi || !sesAktifMi()) return 0;
+    if (typeof document !== 'undefined' && document.hidden) return 0;
+    var s = Math.max(0, Math.min(1, 0.16 + tribunHedefSeviye * 0.78));
+    return spikerKonusuyorMu ? s * 0.62 : s;
+  }
+
+  function ugultuAdim() {
+    var u = ugultu;
+    u.hedef = ugultuHedefHesapla();
+    u.seviye += (u.hedef - u.seviye) * 0.18;               // yumuşak ses geçişi (~0,5 sn)
+    if (u.seviye < 0.004 && u.hedef === 0) {
+      if (u.a) { try { u.a.pause(); } catch (e) {} }
+      if (u.b) { try { u.b.pause(); } catch (e) {} }
+      if (u.timer !== null) { clearInterval(u.timer); u.timer = null; }
+      u.aktif = null; u.seviye = 0;
+      return;
+    }
+    if (!u.a) { u.a = sesElemani(UGULTU_DOSYA); u.b = sesElemani(UGULTU_DOSYA); }
+    if (!u.a || !u.b) return;
+    if (!u.aktif) { u.aktif = u.a; try { u.a.currentTime = 0; } catch (e) {} oynat(u.a); }
+    var ak = u.aktif, dg = (ak === u.a) ? u.b : u.a;
+    var sure = ak.duration, kalan = (sure && isFinite(sure)) ? sure - ak.currentTime : 99;
+    var k = 1;
+    if (kalan < UGULTU_BINDIRME) {
+      if (dg.paused) { try { dg.currentTime = 0; } catch (e) {} oynat(dg); }
+      k = Math.max(0, kalan / UGULTU_BINDIRME);
+      try { dg.volume = Math.min(1, u.seviye * Math.sqrt(1 - k)); } catch (e) {}
+      if (kalan < 0.06 || ak.ended) { u.aktif = dg; try { ak.pause(); } catch (e) {} k = 1; ak = dg; }
+    }
+    try { ak.volume = Math.min(1, u.seviye * Math.sqrt(k)); } catch (e) {}
+    if (ak.paused && !ak.ended && u.hedef > 0) oynat(ak);
+  }
+
+  function oynat(el) {
+    try { var p = el.play(); if (p && typeof p.catch === 'function') p.catch(function () {}); } catch (e) {}
+  }
+
+  function ugultuBaslat() {
+    if (zorunluSessiz || typeof global.setInterval !== 'function') return;
+    if (ugultu.timer === null) ugultu.timer = setInterval(ugultuAdim, 90);
+    ugultuAdim();
+  }
+
+  /** Olaya tepki: 'gol' | 'alkis' | 'ooo' | 'ah' | 'heyecan'. guc 0..1.5 ses düzeyini ölçekler. */
+  function tepkiCal(tip, guc) {
+    var tn = TEPKI[tip];
+    if (!tn || !sesAktifMi()) return false;
+    if (typeof document !== 'undefined' && document.hidden) return false;
+    var ms = simdiMs();
+    if (sonTepkiMs[tip] && ms - sonTepkiMs[tip] < tn[2]) return false;
+    var el = tepkiHavuz[tip] || (tepkiHavuz[tip] = sesElemani(tn[0]));
+    if (!el) return false;
+    sonTepkiMs[tip] = ms;
+    try {
+      if (el.readyState > 0) { try { el.currentTime = 0; } catch (_) {} }
+      var g = (typeof guc === 'number' && isFinite(guc)) ? Math.max(0.3, Math.min(1.3, guc)) : 1;
+      el.volume = Math.max(0, Math.min(1, tn[1] * g * (spikerKonusuyorMu ? 0.8 : 1)));
+      oynat(el);
+      return true;
+    } catch (e) { return false; }
+  }
+
   function tezahuratSesDuzeyiHesapla() {
-    var baz = Math.max(0.36, Math.min(0.84, 0.34 + tribunHedefSeviye * 0.62));
+    var baz = Math.max(0.5, Math.min(0.9, 0.44 + tribunHedefSeviye * 0.6));   // tezahürat arka planda ama net duyulur
     return spikerKonusuyorMu ? baz * 0.60 : baz;
   }
 
@@ -394,8 +485,13 @@
   }
 
   function tezahuratDalgasiCal(audioCtx) {
-    if (!audioCtx || !ambiyansDuck || !tribunAktifMi || !sesAktifMi()) return;
+    if (!tribunAktifMi || !sesAktifMi()) return;
     if (typeof document !== 'undefined' && document.hidden) return;
+    if (Math.random() < 0.35) tepkiCal('alkis', 0.55);   // kayıt tabanlı tribün: sentetik dalga yerine seyrek hafif alkış
+    return;
+    // (eski sentetik dalga – kullanılmıyor)
+    // eslint-disable-next-line no-unreachable
+    if (!audioCtx || !ambiyansDuck) return;
     var t = audioCtx.currentTime + 0.04;
     var tip = tezahuratSira % 3;
     tezahuratSira += 1;
@@ -540,7 +636,7 @@
     tezahuratZamaniTemizle();
     if (!tribunAktifMi || !sesAktifMi()) return;
     if (typeof document !== 'undefined' && document.hidden) return;
-    var aralik = ilkMi ? 1100 : (2800 + Math.floor(Math.random() * 2400));
+    var aralik = ilkMi ? 2500 : (4500 + Math.floor(Math.random() * 5000));   // tezahüratlar arasında uğultulu nefes
     tezahuratTimer = setTimeout(function () {
       tezahuratTimer = null;
       if (!tribunAktifMi || !sesAktifMi()) return;
@@ -584,7 +680,7 @@
         ambiyansDuck.connect(ambiyansMaster);
 
         var bedGain = audioCtx.createGain();
-        bedGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+        bedGain.gain.setValueAtTime(0.10, audioCtx.currentTime);   // asıl uğultu: sesler/tribun_ugultu.mp3
 
         var lp = audioCtx.createBiquadFilter();
         lp.type = 'lowpass';
@@ -944,6 +1040,8 @@
 
     tezahurat: function (audioCtx, t, guc) {
       var g = gucSinirla(guc, 1.0);
+      // kayıt tabanlı tribün tepkisi: hafif → yükselen heyecan, orta → alkış, güçlü → gol kükremesi
+      if (tepkiCal(g >= 1.2 ? 'gol' : (g >= 0.95 ? 'alkis' : 'heyecan'), Math.min(1.2, 0.75 + g * 0.25)) || TEPKI) return;
       var sure = 1.75;
 
       // Stadyum tribün uğultusu (gövde + tiz coşku filtreleri)
@@ -1260,6 +1358,7 @@
         return false;
       }
       tribunAktifMi = true;
+      ugultuBaslat();
       try {
         ambiyansMaster.gain.setTargetAtTime(tribunHedefSeviye, audioCtx.currentTime, 0.25);
       } catch (e) {}
@@ -1284,6 +1383,11 @@
       try {
         ambiyansMaster.gain.setTargetAtTime(Math.max(0.0001, tribunHedefSeviye), ctx.currentTime, 0.25);
       } catch (e) {}
+    },
+
+    /** Tribün tepkisi: 'gol' | 'alkis' | 'ooo' | 'ah' | 'heyecan' */
+    tribunTepki: function (tip, guc) {
+      return tepkiCal(tip, guc);
     },
 
     tribunTezahurat: function (tip) {

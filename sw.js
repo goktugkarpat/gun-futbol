@@ -1,7 +1,7 @@
 /* İnternetsiz çalışma. index.html için önce ağ, diğer dosyalar için önce önbellek.
    Yalnız bu oyunun önbellekleri (gun-futbol-) silinir; aynı sitedeki diğer oyunlara dokunulmaz. */
 const ONEK = 'gun-futbol-';
-const CACHE = 'gun-futbol-v12';
+const CACHE = 'gun-futbol-v13';
 const SESLER = [
   'basla', 'basla_2', 'basla_3',
   'gun_top', 'gun_top_2', 'gun_top_3', 'gun_top_4',
@@ -69,7 +69,7 @@ const SESLER = [
   'p_onuachu_top', 'p_onuachu_aksiyon',
   'tezahurat_cimbombom', 'tezahurat_cimbom_alkis',
   'tezahurat_sampiyon', 'tezahurat_sari_kirmizi',
-  'tezahurat_haydi_aslanlar', 'tezahurat_gol_cosku'
+  'tezahurat_haydi_aslanlar', 'tezahurat_gol_cosku', 'tribun_ugultu', 'tribun_alkis', 'tribun_gol', 'tribun_ooo', 'tribun_ah', 'tribun_heyecan'
 ];
 const CORE = [
   './',

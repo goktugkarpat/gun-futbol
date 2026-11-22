@@ -64,7 +64,7 @@
       sessiz: false,
       oto: false,
       hiz: 1,
-      sure: 60,
+      sure: 150,   // her devre 2,5 dakika
       rakip: 'FB'
     };
     try {
@@ -217,6 +217,16 @@
     } catch (_) {
       // Sessiz geç
     }
+  }
+
+  // Tribün tepkisi (ses.js): 'gol' | 'alkis' | 'ooo' | 'ah' | 'heyecan'
+  function tribunTepkiCal(tip, guc) {
+    try {
+      var s = global.SES;
+      if (s && typeof s.tribunTepki === 'function') {
+        s.tribunTepki(tip, guc);
+      }
+    } catch (e) {}
   }
 
   function tribunTezahuratCal(tip) {
@@ -1419,8 +1429,7 @@
     efektCagir('aslanCutaway', atan);
     sesCal('superSut', 1.1);
     tribunAyar(true, 0.76);
-    sesCal('tezahurat', 1.25);
-    tribunTezahuratCal('gol');
+    tribunTepkiCal('heyecan', 1.25);   // Aslan Şutu: tribün ayağa kalkar (gol kükremesi gol olunca gelir)
     spikerCal('aslan_sutu', 1800);
   }
 
@@ -1858,7 +1867,7 @@
       sesCal('zafer', 1.1);
       spikerCal('zafer', 1200);
     } else {
-      sesCal('tezahurat', 0.8);
+      tribunTepkiCal('alkis', 0.7);
       spikerCal('mac_sonu', 1200);
     }
   }
@@ -1923,8 +1932,10 @@
     }
 
     efektCagir('golPatlat', top.x, ustKaleMi ? saha.ust : saha.alt, takimKod, atan);
-    sesCal('tezahurat', 1.40);
-    tribunAyar(true, 0.78);
+    if (takim !== 'GS') {
+      tribunTepkiCal('ah', 1.0);        // rakip golü: tribünden hayal kırıklığı
+    }
+    tribunAyar(true, takim === 'GS' ? 0.78 : 0.34);
     if (takim === 'GS') {
       tribunTezahuratCal('gol');
     }
@@ -2172,7 +2183,7 @@
       sonKurtarisMs = ms;
       efektCagir('toz', gk.x, gk.y, 6);
       sesCal(yakaladiMi ? 'yakala' : 'kapma', yakaladiMi ? 0.95 : 0.85);
-      sesCal('tezahurat', 1.0);
+      tribunTepkiCal(gk.takim === 'GS' ? 'alkis' : 'ooo', 1.0);   // bizim kaleci: alkış · rakip kaleci kurtardı: "ooo"
       if (gk.sesKey && Math.random() < 0.6) {
         spikerCal('p_' + gk.sesKey + '_aksiyon', 3600);
       } else {
@@ -2220,6 +2231,7 @@
           top.direkSoguma = 0.30;
           efektCagir('direk', d.x, d.y);
           sesCal('direk', 1.0);
+          tribunTepkiCal('ooo', 1.1);
           spikerCal('direk', 2200);
         }
         break;
