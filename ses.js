@@ -40,6 +40,8 @@
     ag: 140,
     kapma: 50,
     yakala: 60,
+    kafa: 55,
+    ucus: 160,
     tezahurat: 350,
     zafer: 600
   };
@@ -1088,6 +1090,31 @@
       osc.stop(t + 0.095);
 
       gurultuCal(audioCtx, t, 0.045, 'bandpass', 650, 380, 1.1, 0.18 * g);
+    },
+
+    kafa: function (audioCtx, t, guc) {
+      var g = gucSinirla(guc, 1.0);
+      var osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(195, t);
+      osc.frequency.exponentialRampToValueAtTime(68, t + 0.085);
+
+      var gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.42 * g, t + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.095);
+
+      osc.connect(gain);
+      gain.connect(cikisDugumu());
+      osc.start(t);
+      osc.stop(t + 0.105);
+
+      gurultuCal(audioCtx, t, 0.05, 'bandpass', 920, 420, 1.3, 0.24 * g);
+    },
+
+    ucus: function (audioCtx, t, guc) {
+      var g = gucSinirla(guc, 0.9);
+      gurultuCal(audioCtx, t, 0.18, 'bandpass', 620, 240, 1.1, 0.16 * g);
     },
 
     tezahurat: function (audioCtx, t, guc) {

@@ -522,6 +522,7 @@
     yariCap: 11,
     aslanMi: false,
     superMi: false,
+    ortaMi: false,
     falso: 0,
     falsoSure: 0,
     sahip: null,
@@ -718,6 +719,10 @@
     p.kaleciTutSure = 0;
     p.kaleciTutuyor = false;
     p.kurtarisSure = 0;
+    p.ucusT = 0;
+    p.ucusMax = 0.56;
+    p.ucusYon = 0;
+    p.ucusVx = 0;
     p.calimSoguma = 0;
     p.topTutmaSure = 0;
     p.sonPasVeren = null;
@@ -725,6 +730,7 @@
     p.tacTutuyor = false;
     p.tacAtisT = 0;
     p.kafaT = 0;
+    p.kafaMax = 0.46;
     p.ilkDokunusSure = 0;
     p.dribbleTozSayac = 0;
     p.yariCap = p.iri ? 21 : 19;
@@ -801,6 +807,10 @@
       p.kaleciTutSure = 0;
       p.kaleciTutuyor = false;
       p.kurtarisSure = 0;
+      p.ucusT = 0;
+      p.ucusMax = 0.56;
+      p.ucusYon = 0;
+      p.ucusVx = 0;
       p.calimSoguma = 0;
       p.topTutmaSure = 0;
       p.sonPasVeren = null;
@@ -808,6 +818,7 @@
       p.tacTutuyor = false;
       p.tacAtisT = 0;
       p.kafaT = 0;
+      p.kafaMax = 0.46;
       p.ilkDokunusSure = 0;
       p.dribbleTozSayac = 0;
       p.yonAci = p.takim === 'GS' ? -Math.PI * 0.5 : Math.PI * 0.5;
@@ -830,6 +841,7 @@
     top.vz = 0;
     top.aslanMi = false;
     top.superMi = false;
+    top.ortaMi = false;
     top.falso = 0;
     top.falsoSure = 0;
     top.almakYasakSure = 0;
@@ -913,6 +925,7 @@
     top.vz = 0;
     top.aslanMi = false;
     top.superMi = false;
+    top.ortaMi = false;
     top.falso = 0;
     top.falsoSure = 0;
     top.pasHedef = null;
@@ -1034,6 +1047,7 @@
 
   function enUygunPasHedefi(pasci, yonX, yonY, mevcutHedef) {
     if (!pasci) return null;
+    var saha = sahaAl();
     var gsMi = pasci.takim === 'GS';
     var takim = gsMi ? gsOyuncular : fbOyuncular;
     var rakipler = gsMi ? fbOyuncular : gsOyuncular;
@@ -1078,6 +1092,16 @@
           skor = hiza * 220 - mesafe * 0.25;
           if (aday.gunMu && hiza > 0.1) skor += 40;
           if (mevcutHedef && aday === mevcutHedef) skor += 24;
+        }
+        // Hücum kanadındaysa ceza sahası içindeki arkadaşa orta açmayı öne al
+        if (
+          Math.abs(pasci.x - saha.ortaX) > 210 &&
+          pasci.y < saha.ust + 560 &&
+          aday.y < saha.ust + 340 &&
+          Math.abs(aday.x - saha.ortaX) < 290
+        ) {
+          if (gMag <= 0.20) skor += 75;
+          else if (hiza > 0.10) skor += 45;
         }
       } else {
         if (gMag > 0.22) {
@@ -1261,8 +1285,18 @@
       }
     }
 
+    var kanatGS = pasci.takim === 'GS' && Math.abs(pasci.x - saha.ortaX) > 210 && pasci.y < saha.ust + 560 && ty < saha.ust + 350 && Math.abs(tx - saha.ortaX) < 310;
+    var kanatFB = pasci.takim === 'FB' && Math.abs(pasci.x - saha.ortaX) > 210 && pasci.y > saha.alt - 560 && ty > saha.alt - 350 && Math.abs(tx - saha.ortaX) < 310;
+    var ortaMi = Boolean(kanatGS || kanatFB);
+
     var hiz, pasVz, basZ;
-    if (engelVar) {
+    if (ortaMi) {
+      // Kanattan ceza sahasına kavisli yüksek orta (kafa golü için)
+      hiz = clamp(dist / 0.62, 430, 610);
+      var ucusSure = dist / Math.max(360, hiz);
+      pasVz = clamp(24 / Math.max(0.32, ucusSure) + 420 * ucusSure, 240, 345);
+      basZ = 10;
+    } else if (engelVar) {
       // Koridorda rakip varsa otomatik aşırtma pas (5 yaş dostu temiz geçiş)
       hiz = clamp(500 + dist * 0.45, 510, 675);
       pasVz = clamp(195 + dist * 0.20, 195, 285);
@@ -1295,8 +1329,9 @@
     top.vz = pasVz;
     top.aslanMi = false;
     top.superMi = false;
-    top.falso = 0;
-    top.falsoSure = 0;
+    top.ortaMi = ortaMi;
+    top.falso = ortaMi ? (pasci.x < saha.ortaX ? 110 : -110) : 0;
+    top.falsoSure = ortaMi ? 0.65 : 0;
     top.degajKoruma = 0;
     top.almakYasakSure = 0.24;
 
@@ -1372,6 +1407,7 @@
       : 0;
     top.aslanMi = Boolean(superMi);
     top.superMi = Boolean(superMi);
+    top.ortaMi = false;
     top.falso = superMi ? (saha.ortaX - hedefX) * 1.15 : yonFalso;
     top.falsoSure = superMi ? 0 : 0.42;
     top.almakYasakSure = 0.22;
@@ -1395,6 +1431,54 @@
     }
     if (!superMi && atan.takim === 'GS' && !derinUzaklastirma && sarj >= 0.60) {
       spikerCal('sut_sert', 4200);
+    }
+    return true;
+  }
+
+  function kafaVurusuAt(atan, hedefX, hedefY, gucOran) {
+    if (!atan) return false;
+    var sarj = typeof gucOran === 'number' && isFinite(gucOran) ? clamp(gucOran, 0, 1) : 0.78;
+    var dx = hedefX - atan.x;
+    var dy = hedefY - atan.y;
+    var dist = Math.max(1, hypot2(dx, dy));
+    var hiz = clamp(760 + sarj * 220, 760, 990);
+
+    top.sahip = null;
+    top.sonVuran = atan;
+    top.sonTakim = atan.takim;
+    top.sonPasAtan = null;
+    top.pasHedef = null;
+    top.pasKilitSure = 0;
+    top.pasAlisKilidi = 0;
+    top.degajKoruma = 0;
+    top.ortaMi = false;
+    top.aslanMi = false;
+    top.superMi = false;
+    top.falso = 0;
+    top.falsoSure = 0;
+    top.x = atan.x + (dx / dist) * 18;
+    top.y = atan.y + (dy / dist) * 18;
+    top.z = clamp(top.z, 24, 38);
+    top.vx = (dx / dist) * hiz;
+    top.vy = (dy / dist) * hiz;
+    top.vz = 12 + sarj * 36;
+    top.almakYasakSure = 0.26;
+
+    atan.yonAci = Math.atan2(dy, dx);
+    atan.kafaMax = 0.46;
+    atan.kafaT = 0.46;
+    atan.sutT = 0;
+    atan.vx = (dx / dist) * 145;
+    atan.vy = (dy / dist) * 145;
+
+    darbeDuraklama = Math.max(darbeDuraklama, 0.032);
+    efektCagir('sutKivilcim', top.x, top.y - top.z, top.vx, top.vy, false);
+    efektCagir('kapmaYildiz', top.x, top.y - top.z);
+    efektCagir('toz', atan.x, atan.y, 6);
+    sesCal('kafa', 1.05);
+    tribunTepkiCal('heyecan', 0.95);
+    if (atan.takim === 'GS') {
+      aslanGucuEkle(8);
     }
     return true;
   }
@@ -1578,9 +1662,12 @@
     // Top yakında ve boşsa gelişine anında kafa/vole / orta mesafeyse tampon
     if (!top.sahip && aktifOyuncu) {
       var mes = hypot2(top.x - aktifOyuncu.x, top.y - aktifOyuncu.y);
-      if (mes < 72 && top.z < 52) {
-        if (top.z >= 20) aktifOyuncu.kafaT = 0.34;
-        var voleHedef = gsSutHedefiSec(aktifOyuncu, giris);
+      var voleHedef = gsSutHedefiSec(aktifOyuncu, giris);
+      if (mes < 88 && top.z >= 15 && top.z <= 64) {
+        kafaVurusuAt(aktifOyuncu, voleHedef.x, voleHedef.y, 0.86);
+        return;
+      }
+      if (mes < 72 && top.z < 15) {
         if (aslanGucu >= 100 && aktifOyuncu.y < saha.ust + 580) {
           aslanCutawayBaslat(aktifOyuncu, voleHedef);
         } else {
@@ -1589,8 +1676,8 @@
         }
         return;
       }
-      if (mes < 155) {
-        tamponSutSure = 0.26;
+      if (top.ortaMi || top.z >= 14 || mes < 190) {
+        tamponSutSure = 0.72;
         return;
       }
       kaymaBaslat(aktifOyuncu);
@@ -2071,6 +2158,29 @@
       gk.kurtarisSure -= dt;
     }
 
+    // Uçarak kurtarış animasyonu ve kayması
+    if (gk.ucusT > 0) {
+      gk.ucusT = Math.max(0, gk.ucusT - dt);
+      var ucusMax = Math.max(0.1, gk.ucusMax || 0.56);
+      var prog = 1 - gk.ucusT / ucusMax;
+      var drag = prog < 0.72 ? Math.exp(-2.0 * dt) : Math.exp(-8.0 * dt);
+      gk.ucusVx *= drag;
+      gk.vx = gk.ucusVx;
+      gk.vy = (anaY - gk.y) * 4;
+      gk.x = clamp(gk.x + gk.vx * dt, saha.kaleSol - 26, saha.kaleSag + 26);
+      gk.y = clamp(gk.y + gk.vy * dt, saha.ust + 14, saha.alt - 14);
+      gk.yonAci = gk.ucusYon > 0 ? 0 : Math.PI;
+      if (top.sahip === gk) {
+        gk.kaleciTutuyor = true;
+        gk.ucusT = Math.min(gk.ucusT, 0.22);
+      }
+      if (gk.ucusT <= 0) {
+        gk.ucusYon = 0;
+        gk.ucusVx = 0;
+      }
+      return;
+    }
+
     // Kaleci topu yakaladıysa 2 adım ceza sahası önüne yürür; ardından elle pas veya uzun degaj çıkarır
     if (top.sahip === gk) {
       gk.kaleciTutuyor = true;
@@ -2111,6 +2221,25 @@
       if (gk.kurtarisSure <= 0 && Math.abs(hedefX - gk.x) > 16) {
         gk.kurtarisSure = 0.42;
       }
+      // Köşeye giden sert şuta uçarak hamle yap
+      if (
+        !top.ortaMi &&
+        Math.abs(top.vy) > 220 &&
+        tahminX >= saha.kaleSol - 28 &&
+        tahminX <= saha.kaleSag + 28 &&
+        tVaris <= 0.48 &&
+        Math.abs(hedefX - gk.x) >= 24
+      ) {
+        gk.ucusYon = hedefX >= gk.x ? 1 : -1;
+        gk.ucusMax = 0.56;
+        gk.ucusT = 0.56;
+        gk.kurtarisSure = 0.56;
+        var maxUcusHiz = gk.takim === 'GS' ? 430 : 385;
+        gk.ucusVx = gk.ucusYon * clamp((Math.abs(hedefX - gk.x) / Math.max(0.18, tVaris)) * 0.92, 280, maxUcusHiz);
+        efektCagir('toz', gk.x, gk.y, 7);
+        sesCal('ucus', 0.9);
+        return;
+      }
     }
 
     var dx = hedefX - gk.x;
@@ -2138,16 +2267,25 @@
     if (gk === top.sonVuran && top.almakYasakSure > 0) return false;
     if (top.degajKoruma > 0 && top.sonTakim === gk.takim) return false;
 
-    var tutYariCap = gk.takim === 'FB'
-      ? (gk.kurtarisSure > 0 ? 31 : 24)
-      : (gk.kurtarisSure > 0 ? 27 : 20);
-    if (top.z >= saha.kaleYukseklik + 6) return false;
-    var d = hypot2(top.x - gk.x, top.y - gk.y);
+    var ucuyorMu = gk.ucusT > 0;
+    var tutYariCap = ucuyorMu
+      ? (gk.takim === 'GS' ? 36 : 33)
+      : (gk.takim === 'FB'
+        ? (gk.kurtarisSure > 0 ? 31 : 24)
+        : (gk.kurtarisSure > 0 ? 27 : 20));
+    var maxZ = ucuyorMu ? (saha.kaleYukseklik + 10) : (saha.kaleYukseklik + 6);
+    if (top.z >= maxZ) return false;
+    var d = ucuyorMu
+      ? Math.min(hypot2(top.x - gk.x, top.y - gk.y), hypot2(top.x - (gk.x + gk.ucusYon * 14), top.y - gk.y))
+      : hypot2(top.x - gk.x, top.y - gk.y);
     if (d > tutYariCap) return false;
 
     // Aslan Şutu kaleciyi savurabilir!
     if (top.aslanMi && top.sonTakim !== gk.takim) {
       gk.sersemSure = 0.72;
+      gk.ucusT = 0;
+      gk.ucusYon = 0;
+      gk.ucusVx = 0;
       gk.vx = (gk.x < top.x ? -240 : 240);
       gk.vy = gk.takim === 'FB' ? -90 : 90;
       top.vx *= 0.88;
@@ -2160,18 +2298,31 @@
 
     var hiz = hypot2(top.vx, top.vy);
     var ustMu = gk.takim === 'FB';
-    var yakaladiMi = (hiz < 940 || d < 28);
+    var ucusCel = ucuyorMu && (hiz >= 640 || d > 19);
+    var yakaladiMi = !ucusCel && (hiz < 940 || d < 28);
     if (yakaladiMi) {
       topSahiplikVer(gk, true);
       gk.kaleciTutuyor = true;
       gk.kurtarisSure = 0.32;
+      if (ucuyorMu) {
+        gk.ucusT = Math.min(gk.ucusT, 0.22);
+      }
     } else {
-      // Sert şutu yana/dışa güvenli açıyla çel
-      top.vy = ustMu ? Math.abs(top.vy) * 0.44 : -Math.abs(top.vy) * 0.44;
-      top.vx = (top.x < saha.ortaX ? -1 : 1) * (310 + Math.random() * 140);
-      top.vz = 75;
+      // Sert şutu yana/dışa güvenli açıyla çel (uçuşta parmak ucuyla kornere/yana)
+      if (ucusCel) {
+        top.vy = ustMu ? (190 + Math.random() * 90) : -(190 + Math.random() * 90);
+        top.vx = (gk.ucusYon || (top.x < saha.ortaX ? -1 : 1)) * (320 + Math.random() * 140);
+        top.vz = 115;
+        efektCagir('kapmaYildiz', top.x, top.y);
+        efektCagir('toz', gk.x, gk.y, 9);
+      } else {
+        top.vy = ustMu ? Math.abs(top.vy) * 0.44 : -Math.abs(top.vy) * 0.44;
+        top.vx = (top.x < saha.ortaX ? -1 : 1) * (310 + Math.random() * 140);
+        top.vz = 75;
+      }
       top.aslanMi = false;
       top.superMi = false;
+      top.ortaMi = false;
       top.falso = 0;
       top.falsoSure = 0;
       top.sonVuran = gk;
@@ -2524,6 +2675,7 @@
     top.vz = 0;
     top.aslanMi = false;
     top.superMi = false;
+    top.ortaMi = false;
     top.falso = 0;
     top.falsoSure = 0;
     top.x = tip === 'tac' ? atanX : noktaX;
@@ -2728,6 +2880,7 @@
     top.falsoSure = Math.abs(falso) > 0 ? 0.92 : 0;
     top.aslanMi = false;
     top.superMi = false;
+    top.ortaMi = Boolean(d.tip === 'korner' && uzunMu);
     top.sonVuran = atan;
     top.sonTakim = d.takim;
     top.sonPasAtan = atan;
@@ -2762,7 +2915,7 @@
     if (d.tip === 'tac') {
       sesCal('pas', 0.48);
     } else {
-      sesCal(uzunMu ? 'sut' : 'pas', 0.92);
+      sesCal(uzunMu ? 'vurus' : 'pas', 0.92);
     }
     if (d.tip === 'korner' && uzunMu) {
       var kornerBasSes = d.takim === 'GS'
@@ -3165,6 +3318,7 @@
           top.vz = -top.vz * 0.56;
         } else {
           top.vz = 0;
+          top.ortaMi = false;
         }
       }
 
@@ -3195,33 +3349,58 @@
       }
     }
 
-    // Havadan gelen yüksek ortalarda kafa vuruşu / kafa pası (22 <= top.z <= 54)
-    if (!top.sahip && top.z >= 22 && top.z <= 54) {
+    // Havadan gelen yüksek ortalarda kafa vuruşu / kafa pası (15 <= top.z <= 64)
+    if (!top.sahip && top.z >= 15 && top.z <= 64) {
+      var kafaMes = top.ortaMi ? 46 : 38;
       for (var hk = 0; hk < oyuncular.length; hk++) {
         var ko = oyuncular[hk];
         if (ko.kaleciMi || ko.sersemSure > 0) continue;
         if (ko === top.sonVuran && top.almakYasakSure > 0) continue;
         if (top.aslanMi && ko.takim === 'GS') continue;
-        if (hypot2(top.x - ko.x, top.y - ko.y) > 36) continue;
+        if (hypot2(top.x - ko.x, top.y - ko.y) > kafaMes) continue;
 
         if (ko.takim === 'GS' && (ko === aktifOyuncu || ko === top.pasHedef) && tamponSutSure > 0) {
           tamponSutSure = 0;
           tamponPasSure = 0;
           var kHedef = gsSutHedefiSec(ko, kullaniciGirisAl());
-          ko.kafaT = 0.34;
-          aslanGucuEkle(6);
-          sutAt(ko, kHedef.x, kHedef.y, false, 0.72);
-          top.z = 26;
-          top.vz = 32;
+          kafaVurusuAt(ko, kHedef.x, kHedef.y, 0.88);
+          return;
+        }
+        // GS kanat/korner ortasında ceza sahasındaki hücumcu gelişine kafa golü dener
+        if (
+          top.ortaMi &&
+          top.sonTakim === 'GS' &&
+          ko.takim === 'GS' &&
+          ko.y < saha.ust + 350 &&
+          Math.abs(ko.x - saha.ortaX) < 310 &&
+          (ko === aktifOyuncu || ko === top.pasHedef || ko.gunMu || ko.rol === 'FWD')
+        ) {
+          var otoKafaHedef = gsSutHedefiSec(ko, kullaniciGirisAl());
+          kafaVurusuAt(ko, otoKafaHedef.x, otoKafaHedef.y, 0.78);
+          return;
+        }
+        // Rakip kanat/korner ortasında kendi hücumcusu kaleye kafa vurur
+        if (
+          top.ortaMi &&
+          top.sonTakim === 'FB' &&
+          ko.takim === 'FB' &&
+          ko.y > saha.alt - 340 &&
+          Math.abs(ko.x - saha.ortaX) < 280
+        ) {
+          var acikSolK = !gsKaleci || gsKaleci.x >= saha.ortaX;
+          var fbHx = acikSolK ? (saha.kaleSol + 22) : (saha.kaleSag - 22);
+          kafaVurusuAt(ko, fbHx, saha.alt + 22, 0.68);
           return;
         }
         if (ko.takim === 'GS' && (ko === aktifOyuncu || ko === top.pasHedef) && tamponPasSure > 0) {
           tamponPasSure = 0;
           var pGiris = kullaniciGirisAl();
           var pHedef = enUygunPasHedefi(ko, pGiris.x, pGiris.y);
-          ko.kafaT = 0.34;
+          ko.kafaMax = 0.40;
+          ko.kafaT = 0.40;
           pasAt(ko, pHedef, pGiris.x, pGiris.y);
-          top.z = 24;
+          top.z = clamp(top.z, 22, 32);
+          sesCal('kafa', 0.8);
           return;
         }
       }
@@ -3232,7 +3411,7 @@
       var ph = top.pasHedef;
       var gsPasMi = top.sonTakim === 'GS';
       var maxHomingMes = gsPasMi ? 640 : 165;
-      var maxHomingZ = gsPasMi ? 64 : 38;
+      var maxHomingZ = top.ortaMi ? 96 : (gsPasMi ? 64 : 38);
       if (!ph.kaleciMi && ph.sersemSure <= 0 && top.z < maxHomingZ) {
         var pdx = ph.x - top.x;
         var pdy = ph.y - top.y;
@@ -3650,9 +3829,16 @@
           } else {
             var fbHedef = enUygunPasHedefi(p, 0, 1);
             var pasHakki = fbPasSoguma <= 0 && p.topTutmaSure >= 0.45;
+            var kanatOrta = pasHakki &&
+              Math.abs(p.x - saha.ortaX) > 220 &&
+              p.y > saha.alt - 480 &&
+              fbHedef &&
+              fbHedef.y > saha.alt - 340 &&
+              Math.abs(fbHedef.x - saha.ortaX) < 280 &&
+              Math.random() < 1.35 * dt;
             var baskidaPas = pasHakki && yakinGs.dist < 95 && fbHedef && Math.random() < 1.65 * dt;
             var ileriPas = pasHakki && p.topTutmaSure >= 0.65 && fbHedef && fbHedef.y > p.y + 75 && Math.random() < 0.72 * dt;
-            if (baskidaPas || ileriPas) {
+            if (kanatOrta || baskidaPas || ileriPas) {
               pasAt(p, fbHedef, 0, 1);
             } else {
               var kacisX = saha.ortaX + Math.sin(zaman * 1.8 + p.idx) * 140;
@@ -4233,6 +4419,22 @@
     }
 
     duranTopDunyaCiz(ctx, saha);
+
+    if (durum === 'oyun' && top.ortaMi && !top.sahip && top.z > 14) {
+      var hedefX = top.pasHedef ? top.pasHedef.x : clamp(top.x + top.vx * 0.25, saha.sol + 40, saha.sag - 40);
+      var hedefY = top.pasHedef ? top.pasHedef.y : clamp(top.y + top.vy * 0.25, saha.ust + 40, saha.alt - 40);
+      var halkaNabiz = 1 + 0.14 * Math.sin(zaman * 12);
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(hedefX, hedefY, 28 * halkaNabiz, 17 * halkaNabiz, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 232, 90, 0.18)';
+      ctx.fill();
+      ctx.lineWidth = 2.6;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(255, 245, 160, 0.92)';
+      ctx.stroke();
+      ctx.restore();
+    }
 
     var oc = global.OYUNCU_CIZ;
     if (oc && typeof oc.kontrolOkCiz === 'function' && durum === 'oyun' && aktifOyuncu) {
@@ -4873,6 +5075,9 @@
       fbKaleci.sersemSure = 0;
       fbKaleci.kaleciTutuyor = false;
       fbKaleci.kurtarisSure = 0;
+      fbKaleci.ucusT = 0;
+      fbKaleci.ucusYon = 0;
+      fbKaleci.ucusVx = 0;
 
       for (var i = 0; i < oyuncular.length; i++) {
         var o = oyuncular[i];
@@ -4890,6 +5095,7 @@
       top.vz = 25;
       top.aslanMi = false;
       top.superMi = false;
+      top.ortaMi = false;
       top.falso = 0;
       top.falsoSure = 0;
       top.sonVuran = gunOyuncu;

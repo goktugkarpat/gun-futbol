@@ -1119,17 +1119,59 @@
     var sutT = Math.max(0, num(p.sutT, 0));
     var tacAtisT = Math.max(0, num(p.tacAtisT, 0));
     var kafaT = Math.max(0, num(p.kafaT, 0));
+    var kafaMax = Math.max(0.1, num(p.kafaMax, 0.46));
     var tacTutuyor = Boolean(p.tacTutuyor);
     var hamleOran = hamleT > 0 ? clamp(Math.max(0.5, hamleT * 3.2), 0, 1) : 0;
     var sutOran = sutT > 0 ? clamp(Math.max(0.5, sutT * 3.6), 0, 1) : 0;
     var tacAtisOran = tacAtisT > 0 ? clamp(tacAtisT / 0.32, 0, 1) : 0;
-    var kafaOran = kafaT > 0 ? clamp(Math.sin((1 - kafaT / 0.34) * Math.PI), 0, 1) : 0;
+    var kafaOran = kafaT > 0 ? clamp(Math.sin((1 - kafaT / kafaMax) * Math.PI), 0, 1) : 0;
+
+    var ucusT = isGK ? Math.max(0, num(p.ucusT, 0)) : 0;
+    var ucusMax = Math.max(0.1, num(p.ucusMax, 0.56));
+    var ucusYon = num(p.ucusYon, 0);
+    var ucusAktif = isGK && ucusT > 0 && ucusYon !== 0;
+    var ucusProg = ucusAktif ? clamp(1 - ucusT / ucusMax, 0, 1) : 0;
+    var ucusH = ucusAktif ? Math.sin(clamp(ucusProg / 0.82, 0, 1) * Math.PI) * 19 : 0;
 
     ctx.save();
     ctx.translate(x, y);
 
     // 1) Ground shadow & selection/status rings
     drawGroundRings(ctx, p, Boolean(aktifMi), Boolean(pasHedefMi), time, dx, dy, scale, hamleOran);
+
+    if (ucusAktif) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(ucusYon * 4, 2, 22 * scale, 6.8 * scale, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
+      ctx.fill();
+
+      // Comic wind speed lines trailing opposite dive direction
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+      ctx.lineWidth = 2.0;
+      ctx.lineCap = 'round';
+      for (var wi = 0; wi < 3; wi++) {
+        var wy = (-8 - wi * 7) * scale;
+        var wLen = (16 + wi * 4) * scale;
+        ctx.beginPath();
+        ctx.moveTo(-ucusYon * 6, wy);
+        ctx.lineTo(-ucusYon * (6 + wLen), wy);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (ucusProg > 0.65) {
+        drawTackleDust(ctx, ucusYon, 0, time, (ucusProg - 0.65) / 0.35);
+      }
+    } else if (kafaOran > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(0, 1, (13 + 7 * kafaOran) * scale, (6.5 + 3.5 * kafaOran) * scale, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 245, 160, ' + (0.55 * kafaOran).toFixed(2) + ')';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if (hamleOran > 0) {
       drawTackleDust(ctx, dx, dy, time, hamleOran);
@@ -1138,15 +1180,21 @@
     // 2) Animated Chibi Body
     var bob = (hamleOran > 0)
       ? -4.2 * hamleOran
-      : (kafaOran > 0 ? 8.5 * kafaOran : Math.abs(Math.cos(faz)) * 2.1 * moveFactor);
+      : (kafaOran > 0 ? 21.0 * kafaOran : Math.abs(Math.cos(faz)) * 2.1 * moveFactor);
     var tilt = (hamleOran > 0)
       ? dx * 0.34 * hamleOran
-      : (tacTutuyor ? -dx * 0.14 : (tacAtisOran > 0 ? dx * 0.22 * tacAtisOran : (kafaOran > 0 ? dx * 0.16 * kafaOran : (sutOran > 0 ? -dx * 0.14 * sutOran : dx * 0.06 * moveFactor))));
+      : (tacTutuyor ? -dx * 0.14 : (tacAtisOran > 0 ? dx * 0.22 * tacAtisOran : (kafaOran > 0 ? (Math.abs(dx) > 0.18 ? dx : (dy < 0 ? 0.45 : -0.45)) * 0.36 * kafaOran : (sutOran > 0 ? -dx * 0.14 * sutOran : dx * 0.06 * moveFactor))));
 
     ctx.save();
     ctx.scale(scale, scale);
-    ctx.translate(dx * hamleOran * 3.5, -bob);
-    ctx.rotate(tilt);
+    if (ucusAktif) {
+      var diveAngle = ucusYon * 1.38 * Math.sin(clamp(ucusProg * 1.25, 0, 1) * Math.PI * 0.5);
+      ctx.translate(ucusYon * 5 * Math.sin(ucusProg * Math.PI), -(6 + ucusH));
+      ctx.rotate(diveAngle);
+    } else {
+      ctx.translate(dx * hamleOran * 3.5, -bob);
+      ctx.rotate(tilt);
+    }
 
     // Leg & boot positions
     var hipSpread = 4.1 * (1 - 0.34 * Math.abs(dx));
@@ -1155,13 +1203,24 @@
     var kickLeft = false;
     var kickRight = false;
 
-    if (hamleOran > 0) {
+    if (ucusAktif) {
+      footLX = -3.8;
+      footLY = 6.2;
+      footRX = 4.2;
+      footRY = 3.5;
+    } else if (hamleOran > 0) {
       // Slide tackle / lunge extension
       footLX = dx * 10.8 * hamleOran - hipSpread * 0.4;
       footLY = dy * 5.2 * hamleOran - 0.8;
       footRX = -dx * 4.5 * hamleOran + hipSpread * 0.7;
       footRY = -dy * 2.0 * hamleOran + 0.6;
       kickLeft = true;
+    } else if (kafaOran > 0) {
+      // Tucked airborne header legs
+      footLX = -hipSpread * 0.9 - dx * 3.0 * kafaOran;
+      footLY = -2.2 * kafaOran;
+      footRX = hipSpread * 0.9 - dx * 4.2 * kafaOran;
+      footRY = -3.2 * kafaOran;
     } else if (tacTutuyor || tacAtisOran > 0) {
       // Planted feet for legal two-handed throw-in
       footLX = -hipSpread * 0.92 - dx * 2.0;
@@ -1252,7 +1311,20 @@
     var hRX = 11.4 + dx * armSwing * 0.7;
     var hRY = -7.6 + dy * armSwing * 0.4 - (hamleOran > 0 ? 3.0 : 0);
 
-    if (tacTutuyor || tacAtisOran > 0) {
+    if (ucusAktif) {
+      drawJersey(ctx, p, kit, ucusYon, 0.1, isGK);
+      drawHead(ctx, p, ucusYon, 0.1, time, 0.85);
+      drawArm(ctx, shLX, shY, -5.2, -33.5, sleeveL, ten, true, kit);
+      drawArm(ctx, shRX, shY, 5.2, -33.5, sleeveR, ten, true, kit);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, -35.5, 11.5, -Math.PI * 0.85, -Math.PI * 0.15);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 2.6;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+    } else if (tacTutuyor || tacAtisOran > 0) {
       // Both arms raised over head (holding throw-in ball or whipping forward)
       var fw = tacAtisOran > 0 ? (1 - tacAtisOran) : 0;
       var throwShiftX = tacTutuyor ? -dx * 2.8 : dx * (-2.2 + fw * 11.5);
@@ -1268,6 +1340,12 @@
       drawArm(ctx, shLX, shY, -6.2 + dx * 2.5, -11.5 + dy * 3.0, sleeveL, ten, isGK, kit);
       drawArm(ctx, shRX, shY, 6.2 + dx * 2.5, -11.5 + dy * 3.0, sleeveR, ten, isGK, kit);
     } else {
+      if (kafaOran > 0) {
+        hLX = -13.8;
+        hLY = -11.8;
+        hRX = 13.8;
+        hRY = -11.8;
+      }
       // Draw trailing arm behind torso, leading arm after torso
       if (dx >= 0) {
         drawArm(ctx, shLX, shY, hLX, hLY, sleeveL, ten, isGK, kit);
@@ -1281,6 +1359,17 @@
 
       // Chibi Anime Head
       drawHead(ctx, p, dx, dy, time, Math.max(sutOran, kafaOran * 0.7));
+
+      if (kafaOran > 0.42) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(dx * 4, -31.5, 10.5, yonAci - 0.85, yonAci + 0.85);
+        ctx.strokeStyle = '#FFF394';
+        ctx.lineWidth = 2.6;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     ctx.restore(); // end scaled/tilted body
