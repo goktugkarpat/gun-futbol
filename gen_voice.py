@@ -163,7 +163,8 @@ SES_ADAYLARI = ("tr-TR-AhmetNeural", "tr-TR-EmelNeural")
 TEMPO = "+8%"
 SILENCE_FILTER = (
     "silenceremove=start_periods=1:start_duration=0:start_threshold=-42dB:"
-    "stop_periods=-1:stop_duration=0.05:stop_threshold=-42dB"
+    "stop_periods=-1:stop_duration=0.05:stop_threshold=-42dB,"
+    "volume=+5.2dB,alimiter=limit=0.92:attack=3:release=50:level=false"
 )
 
 

@@ -1996,8 +1996,8 @@
 
     durum = 'gol';
     golKutlamaBekliyor = true;
-    golKutlamaGecikme = 0.85;
-    golBekleSure = 2.85;
+    golKutlamaGecikme = 0;
+    golBekleSure = 2.35;
     golSonrakiBaslayan = takim === 'GS' ? 'FB' : 'GS';
     golBilgiBekleyen = {
       takim: takim,
@@ -2006,6 +2006,7 @@
       aslanMi: Boolean(top.aslanMi),
       agVuruldu: false
     };
+    golKutlamasiniTetikle();
   }
 
   // --- Otomatik Oyuncu Seçimi ---
@@ -4095,10 +4096,10 @@
           : (d.atan ? d.atan.ad + ' #' + d.atan.no + ' topun başında...' : 'Oyuncular yerini alıyor...')))
       : (rakipMeta.ad + ' kullanıyor...');
 
-    var kutuW = vw >= 1020 ? Math.min(vw - 560, 440) : Math.min(vw - 28, 360);
+    var kutuW = vw >= 1240 ? Math.min(vw - 820, 420) : Math.min(vw - 28, 390);
     var kutuH = 48;
     var kx = (vw - kutuW) * 0.5;
-    var ky = vw >= 1020 ? 12 : 108;
+    var ky = vw >= 1240 ? 14 : (vw > 980 ? 84 : 148);
 
     ctx.save();
     ctx.fillStyle = 'rgba(11, 16, 26, 0.88)';
@@ -4149,15 +4150,25 @@
     }
 
     var camScale = vw > vh
-      ? Math.min(vw / 1120, vh / 850)      // kamera sahaya daha yakın (eski 1340 / 1020)
-      : Math.min(vw / 1120, vh / 1740);
+      ? Math.min(vw / 980, vh / 740)      // 11 inç tablet için biraz daha yakın (eski 1120 / 850)
+      : Math.min(vw / 980, vh / 1520);
     if (!(camScale > 0)) camScale = 1;
     var visW = vw / camScale;
     var visH = vh / camScale;
     var tabanCamX = (saha.W - visW) * 0.5;
-    var hedefCamX = vw > vh
-      ? tabanCamX + clamp((top.x - saha.ortaX) * 0.045, -20, 20)
-      : tabanCamX;
+    var odakX = durum === 'gol'
+      ? saha.ortaX
+      : (duranTop ? duranTop.noktaX : top.x);
+    var hedefCamX;
+    if (visW < saha.W) {
+      var panLimit = (saha.W - visW) * 0.5 + 15;
+      var xOran = clamp((odakX - saha.ortaX) / Math.max(1, saha.en * 0.5), -1, 1);
+      hedefCamX = tabanCamX + xOran * panLimit;
+    } else {
+      hedefCamX = vw > vh
+        ? tabanCamX + clamp((odakX - saha.ortaX) * 0.045, -20, 20)
+        : tabanCamX;
+    }
 
     var simdi = simdiMs();
     var camDt = sonKameraMs ? clamp((simdi - sonKameraMs) / 1000, 0.004, 0.05) : 0.016;
@@ -4196,8 +4207,9 @@
       var maxDY = 600 * camDt;
       kameraY += clamp(dY, -maxDY, maxDY);
 
-      var dX = (hedefCamX - kameraX) * (1 - Math.exp(-2.6 * camDt));
-      var maxDX = 240 * camDt;
+      var kX = duranTop ? 5.2 : 3.4;
+      var dX = (hedefCamX - kameraX) * (1 - Math.exp(-kX * camDt));
+      var maxDX = 340 * camDt;
       kameraX += clamp(dX, -maxDX, maxDX);
     }
     var camX = kameraX;

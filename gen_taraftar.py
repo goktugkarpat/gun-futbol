@@ -322,7 +322,8 @@ def yaz_mp3(st: np.ndarray, hedef: pathlib.Path, tmp: pathlib.Path, lufs: float 
     if not dongu:
         af += f",loudnorm=I={lufs}:TP=-1.5:LRA=11"
     else:
-        af += f",volume={10 ** ((lufs + 20.0) / 20.0):.3f}"  # döngüde loudnorm baş/son düzeyini bozmasın
+        rms_db = 20.0 * float(np.log10(np.sqrt(float(np.mean(st ** 2))) + 1e-9))
+        af += f",volume={lufs - rms_db:.2f}dB"  # döngüde loudnorm baş/son düzeyini bozmasın
     hedef.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "f32le", "-ar", str(SR), "-ac", "2",
                     "-i", str(raw), "-af", af, "-codec:a", "libmp3lame", "-b:a", f"{kbps}k", str(hedef)], check=True)
@@ -598,7 +599,7 @@ async def tezahuratlari_uret(cikti: pathlib.Path, tmp: pathlib.Path, rng, yalniz
 
 
 URETIM = {
-    "ugultu": ("tribun_ugultu.mp3", ses_ugultu, dict(lufs=-21.0, dongu=True, kbps=128)),
+    "ugultu": ("tribun_ugultu.mp3", ses_ugultu, dict(lufs=-25.5, dongu=True, kbps=128)),
     "alkis": ("tribun_alkis.mp3", ses_alkis, dict(lufs=-16.0)),
     "gol": ("tribun_gol.mp3", ses_gol, dict(lufs=-13.0)),
     "ooo": ("tribun_ooo.mp3", ses_ooo, dict(lufs=-15.0)),

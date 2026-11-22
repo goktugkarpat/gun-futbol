@@ -1,7 +1,7 @@
 /* İnternetsiz çalışma. index.html için önce ağ, diğer dosyalar için önce önbellek.
    Yalnız bu oyunun önbellekleri (gun-futbol-) silinir; aynı sitedeki diğer oyunlara dokunulmaz. */
 const ONEK = 'gun-futbol-';
-const CACHE = 'gun-futbol-v14';
+const CACHE = 'gun-futbol-v15';
 const SESLER = [
   'basla', 'basla_2', 'basla_3',
   'gun_top', 'gun_top_2', 'gun_top_3', 'gun_top_4',
