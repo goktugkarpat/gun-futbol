@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>GÜN FUTBOL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gün Futbol">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#A90432">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css?v=11">
+</head>
+<body>
+<div id="oyun-alani">
+  <canvas id="saha-tuval" aria-label="Gün Futbol sahası"></canvas>
+
+  <div id="ust-hud">
+    <div id="skor-tabela" aria-label="Skor tabelası">
+      <div class="skor-takim gs">
+        <span class="takim-rozet gs-rozet" aria-hidden="true"></span>
+        <span class="takim-ad">GS</span>
+        <span id="gs-skor" class="skor-sayi">0</span>
+      </div>
+      <div class="skor-orta">
+        <span id="mac-sure">01:00</span>
+        <span id="mac-yari">1. YARI</span>
+      </div>
+      <div id="rakip-skor-kutu" class="skor-takim fb">
+        <span id="fb-skor" class="skor-sayi">0</span>
+        <span id="rakip-ad" class="takim-ad">FB</span>
+        <span id="rakip-rozet" class="takim-rozet fb-rozet" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div id="aslan-kutu" aria-label="Aslan Gücü göstergesi">
+      <span class="aslan-simge" aria-hidden="true">
+        <svg viewBox="0 0 36 36" width="24" height="24">
+          <circle cx="18" cy="18" r="15" fill="#FDB912" stroke="#111" stroke-width="2.6"/>
+          <path d="M18 6l3.2 6.5 7.1 1-5.1 5 1.2 7.1L18 22.2l-6.4 3.4 1.2-7.1-5.1-5 7.1-1z" fill="#A90432" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="aslan-iz">
+        <div id="aslan-dolu"></div>
+        <span id="aslan-yazi">ASLAN GÜCÜ</span>
+      </div>
+    </div>
+
+    <button id="ses-btn" type="button" aria-label="Ses">
+      <svg class="ses-ikon" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
+        <path class="ses-hoparlor" d="M5 12h6l7-6v20l-7-6H5z" fill="#111" stroke="#111" stroke-width="2" stroke-linejoin="round"/>
+        <path class="ses-dalga" d="M22 11.5c1.8 1.5 2.7 3 2.7 4.5s-.9 3-2.7 4.5M25.5 8.5c2.7 2.2 4 4.7 4 7.5s-1.3 5.3-4 7.5" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"/>
+        <path class="ses-cizgi" d="M21 11l8 10M29 11l-8 10" fill="none" stroke="#A90432" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="dokunmatik-katman" class="gizli">
+    <div id="sol-hareket-alani">
+      <div id="joy-taban" class="gizli">
+        <div id="joy-topuz"></div>
+      </div>
+    </div>
+    <div id="sag-dugmeler">
+      <button id="btn-pas" class="oyun-btn pas-btn" type="button">
+        <span class="tus-rozet" aria-hidden="true">X</span>
+        <svg class="btn-ikon" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="14" fill="#fff" stroke="#111" stroke-width="3"/>
+          <polygon points="24,15 30,20 28,27 20,27 18,20" fill="#111"/>
+          <path d="M9 36c6-3 11-3 16 0" fill="none" stroke="#FDB912" stroke-width="3.6" stroke-linecap="round"/>
+        </svg>
+        <span class="btn-etiket">PAS</span>
+      </button>
+      <button id="btn-sut" class="oyun-btn sut-btn" type="button">
+        <span class="tus-rozet" aria-hidden="true">Boşluk</span>
+        <svg class="btn-ikon" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M10 34l9-9M7 25l8-8" stroke="#FDB912" stroke-width="3.4" stroke-linecap="round"/>
+          <circle cx="29" cy="20" r="12.5" fill="#fff" stroke="#111" stroke-width="3"/>
+          <polygon points="29,12.5 34.5,16.5 32.5,23 25.5,23 23.5,16.5" fill="#111"/>
+        </svg>
+        <span class="btn-etiket">ŞUT</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="pc-ipucu" aria-hidden="true">WASD / Oklar: Koş · X / Z: Pas/Kap · Boşluk / C: Şut · P: Mola · R: Yeniden</div>
+
+  <div id="perde-baslik" class="perde">
+    <div class="baslik-sahne" aria-hidden="true">
+      <img class="baslik-kapak" src="kapak.jpg?v=10" alt="">
+      <div class="baslik-vignette"></div>
+    </div>
+    <div class="derbi-kart">
+      <div class="derbi-serit">GALATASARAY · #61</div>
+      <h1 class="baslik-logo">GÜN <span>FUTBOL</span></h1>
+      <div class="derbi-armalar">
+        <div class="arma-kutu gs-arma">
+          <svg viewBox="0 0 110 128" width="94" height="110" aria-hidden="true">
+            <defs>
+              <clipPath id="gs-kalkan-clip">
+                <path d="M12 16Q55 6 98 16Q98 78 55 116Q12 78 12 16Z"/>
+              </clipPath>
+            </defs>
+            <path d="M8 13Q55 2 102 13Q102 82 55 122Q8 82 8 13Z" fill="#111"/>
+            <g clip-path="url(#gs-kalkan-clip)">
+              <rect x="0" y="0" width="55" height="128" fill="#A90432"/>
+              <rect x="55" y="0" width="55" height="128" fill="#FDB912"/>
+            </g>
+            <path d="M12 16Q55 6 98 16Q98 78 55 116Q12 78 12 16Z" fill="none" stroke="#FDB912" stroke-width="3"/>
+            <text x="55" y="69" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" fill="#FFF4A3" stroke="#111" stroke-width="6" paint-order="stroke">61</text>
+            <text x="55" y="95" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="18" fill="#fff" stroke="#111" stroke-width="4" paint-order="stroke">GS</text>
+          </svg>
+        </div>
+
+        <div class="derbi-vs">
+          <span class="vs-yazi">VS</span>
+        </div>
+
+        <div id="rakip-arma" class="arma-kutu fb-arma">
+          <svg viewBox="0 0 110 128" width="94" height="110" aria-hidden="true">
+            <defs>
+              <clipPath id="fb-kalkan-clip">
+                <path d="M12 16Q55 6 98 16Q98 78 55 116Q12 78 12 16Z"/>
+              </clipPath>
+            </defs>
+            <path d="M8 13Q55 2 102 13Q102 82 55 122Q8 82 8 13Z" fill="#111"/>
+            <g clip-path="url(#fb-kalkan-clip)">
+              <rect id="rakip-serit-1" x="0" y="0" width="28" height="128" fill="#002D72"/>
+              <rect id="rakip-serit-2" x="28" y="0" width="27" height="128" fill="#FFED00"/>
+              <rect id="rakip-serit-3" x="55" y="0" width="27" height="128" fill="#002D72"/>
+              <rect id="rakip-serit-4" x="82" y="0" width="28" height="128" fill="#FFED00"/>
+            </g>
+            <path id="rakip-arma-kenar" d="M12 16Q55 6 98 16Q98 78 55 116Q12 78 12 16Z" fill="none" stroke="#FFED00" stroke-width="3"/>
+            <text id="rakip-arma-yazi" x="55" y="72" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="32" fill="#fff" stroke="#111" stroke-width="6" paint-order="stroke">FB</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="rakip-etiket">RAKİBİNİ SEÇ</div>
+      <div id="rakip-secici" class="rakip-secici" role="group" aria-label="Rakip takım seçimi">
+        <button type="button" class="rakip-btn aktif" data-rakip="FB"><span class="rakip-nokta fb-rozet" aria-hidden="true"></span>Fenerbahçe</button>
+        <button type="button" class="rakip-btn" data-rakip="BJK"><span class="rakip-nokta bjk-rozet" aria-hidden="true"></span>Beşiktaş</button>
+        <button type="button" class="rakip-btn" data-rakip="TS"><span class="rakip-nokta ts-rozet" aria-hidden="true"></span>Trabzonspor</button>
+      </div>
+
+      <div id="derbi-bilgi" class="derbi-bilgi">GS vs FB · 11'e 11 · 2×1 DK</div>
+      <button id="btn-basla" class="ana-dugme" type="button">BAŞLA ▶</button>
+    </div>
+  </div>
+
+  <div id="perde-devre" class="perde gizli">
+    <div class="kart-kutu devre-kart">
+      <h2 class="kart-baslik">İLK YARI BİTTİ</h2>
+      <div id="devre-skor" class="buyuk-skor">0 - 0</div>
+      <p id="devre-yazi" class="kart-yazi">2. yarıya hazır mısın?</p>
+      <button id="btn-devam" class="ana-dugme" type="button">2. YARI ▶</button>
+    </div>
+  </div>
+
+  <div id="perde-gol" class="perde gizli" aria-live="polite">
+    <div class="gol-serit">
+      <div id="gol-baslik">GOOOOL!</div>
+      <div id="gol-detay">GÜN!</div>
+    </div>
+  </div>
+
+  <div id="perde-mola" class="perde gizli">
+    <div class="kart-kutu mola-kart">
+      <h2 class="kart-baslik">MOLA</h2>
+      <div class="kart-dugmeler">
+        <button id="btn-mola-devam" class="ana-dugme" type="button">DEVAM ET ▶</button>
+        <button id="btn-mola-yeniden" class="ikincil-dugme" type="button">YENİDEN</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="perde-sonuc" class="perde gizli">
+    <div class="kart-kutu sonuc-kart">
+      <div class="kupa-ikon" aria-hidden="true">
+        <svg viewBox="0 0 96 96" width="78" height="78">
+          <path d="M24 18h48v18c0 15-10 26-24 28-14-2-24-13-24-28V18z" fill="#FDB912" stroke="#111" stroke-width="4.5" stroke-linejoin="round"/>
+          <path d="M24 24H12c0 14 6 20 14 21M72 24h12c0 14-6 20-14 21" fill="none" stroke="#111" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M48 64v12M32 76h32l4 8H28z" fill="#FDB912" stroke="#111" stroke-width="4.5" stroke-linejoin="round"/>
+          <path d="M48 26l3.2 6.6 7.3 1-5.3 5.1 1.3 7.3-6.5-3.4-6.5 3.4 1.3-7.3-5.3-5.1 7.3-1z" fill="#FFF4A3" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 id="sonuc-baslik" class="kart-baslik">ŞAMPİYON GS!</h2>
+      <div id="sonuc-skor" class="buyuk-skor">0 - 0</div>
+      <div id="sonuc-istat" class="sonuc-istat"></div>
+      <button id="btn-tekrar" class="ana-dugme" type="button">TEKRAR OYNA</button>
+    </div>
+  </div>
+</div>
+
+<script src="kadrolar.js"></script>
+<script src="ses.js?v=12"></script>
+<script src="efekt.js"></script>
+<script src="saha.js?v=9"></script>
+<script src="oyuncular.js?v=9"></script>
+<script src="oyun.js?v=12"></script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:') && !new URLSearchParams(location.search).has('sw0')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
